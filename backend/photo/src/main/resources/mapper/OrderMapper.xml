@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pdd.photoprint.photo.mapper.OrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.pdd.photoprint.photo.VO.PddOrderSummary">
+        <id column="id" property="id"/>
+        <result column="pdd_order_number" property="pddOrderNumber"/>
+        <result column="date_create" property="dateCreate"/>
+        <result column="date_complete" property="dateComplete"/>
+        <result column="date_delete" property="dateDelete"/>
+        <result column="post_addr" property="postAddr"/>
+        <result column="status" property="status"/>
+        <result column="num_photos" property="numPhotos"/>
+        <result column="address" property="postAddressStr"/>
+        <result column="addr_details" property="postAddrDetailStr"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <select id="queryOrderByNumber" resultMap="BaseResultMap">
+        select orders.*,
+               post_addr.address, post_addr.addr_details
+        from orders join post_addr on orders.post_addr = post_addr.id
+        where orders.pdd_order_number = #{pddOrderNumber}
+    </select>
+
+    <select id="queryOrder" resultMap="BaseResultMap">
+        select orders.*,
+               post_addr.address, post_addr.addr_details
+        from orders join post_addr on orders.post_addr = post_addr.id
+        where 1 = 1
+        <if test="pddOrderNumber != null">
+            and orders.pdd_order_number = #{pddOrderNumber}
+        </if>
+        <if test="orderStatus != null">
+            and orders.status = #{orderStatus}
+        </if>
+
+<!--        <if test="dateStart != null">-->
+<!--            and order.date_create > #{dateStart}-->
+<!--        </if>-->
+
+<!--        <if test="dateEnd != null">-->
+<!--            and order.date_create < #{dateEnd}-->
+<!--        </if>-->
+    </select>
+</mapper>

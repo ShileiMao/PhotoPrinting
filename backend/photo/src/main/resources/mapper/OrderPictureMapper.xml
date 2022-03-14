@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pdd.photoprint.photo.mapper.OrderPictureMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.pdd.photoprint.photo.VO.PrintPhotoSummary">
+        <result column="pdd_order_number" property="pddOrderNumber"/>
+        <result column="picture_id" property="pictureId"/>
+        <result column="copies" property="copies"/>
+        <result column="size" property="size"/>
+        <result column="status" property="status"/>
+        <result column="src" property="src"/>
+        <result column="name" property="picName"/>
+        <result column="width" property="width"/>
+        <result column="height" property="height" />
+    </resultMap>
+
+    <select id="queryPicturesOfOrder" resultMap="BaseResultMap">
+        select orders.pdd_order_number,
+               order_picture.picture_id, order_picture.copies, order_picture.size, order_picture.status,
+               concat(#{baseUrl}, concat('/', pictures.location)) as src, pictures.name, pictures.width, pictures.height
+        from order_picture join pictures on order_picture.picture_id = pictures.id
+                           join orders on order_picture.order_id = orders.id
+        where orders.pdd_order_number = #{orderNumber}
+    </select>
+
+    <select id="queryTotalPictures" resultType="Integer">
+        select sum(order_picture.copies) as total_copies
+        from order_picture join orders on order_picture.order_id = orders.id
+        where orders.pdd_order_number = #{orderNumber}
+    </select>
+
+    <select id="queryTotalPicturesExcept" resultType="Integer">
+        select sum(order_picture.copies) as total_copies
+        from order_picture join orders on order_picture.order_id = orders.id
+        where orders.pdd_order_number = #{orderNumber}
+        and order_picture.picture_id != #{pictureId}
+    </select>
+
+    <update id="updateNumCopies">
+        update order_picture set copies = #{numCopies}
+        where picture_id = #{pictureId}
+        and order_id = #{orderId}
+    </update>
+</mapper>

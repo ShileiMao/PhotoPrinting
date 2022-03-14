@@ -1,0 +1,52 @@
+#开发环境配置
+spring:
+  # 数据源配置，请修改为你项目的实际配置
+  datasource:
+    username: "root"
+    password: "Admin!23"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/photo_name?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 30MB
+  redis:
+    host: localhost
+    port: 6397
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    timeout: 600
+  h2:
+    console:
+      enabled: true
+
+# 开启http请求日志记录
+request-log:
+  enabled: true
+
+logging:
+  level:
+    # web信息日志记录
+    web: debug
+    root: INFO
+    # SQL日志记录
+  config: classpath:logback-spring.xml
+  file:
+    path: /var/logs
+
+
+serverDomain: http://127.0.0.1:8080/photo
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+# upload-dir:
+server:
+  port: 8000
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: logs
