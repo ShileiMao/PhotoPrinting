@@ -22,6 +22,7 @@ export const AppRouter = () => {
   return (
     <Routes>
        <Route element={<MainLayout />} onChange={onChange}>
+        <Route path="/" element={<QueryOrder />} />
         <Route path="/queryOrder" element={<QueryOrder />} />
         <Route path="/queryOrder/:orderNum" element={<Orderlist />} />
        </Route>
