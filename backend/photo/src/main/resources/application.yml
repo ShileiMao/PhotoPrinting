@@ -37,7 +37,6 @@ logging:
     path: /var/logs
 
 
-serverDomain: http://127.0.0.1:8080/photo
 #mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -2,6 +2,7 @@ import { post, get, put, _delete } from "./axios";
 import { getToken } from "./token";
 import TOKEN_KEYS from "./consts";
 import { param } from "express/lib/request";
+import axios from "axios";
 
 function getAuthenticationHeaders() {
     let access_token = getToken(TOKEN_KEYS.ACCESS_TOKEN);
@@ -43,6 +44,14 @@ export function apiPost(url, data = {}, params = {}) {
     return post(url, data, params1)
 }
 
+export function apiDelete(url, data = {}, params = {}) {
+    let authHeaders = getAuthenticationHeaders()
+    let params1 = {...params, ...authHeaders}
+
+    console.log("data sending: " + JSON.stringify(data));
+    return _delete(url, authHeaders, data);
+}
+
 export async function queryPhotos(pddOrderNumber) {
     const url = `/orders/${pddOrderNumber}/photos`
     const response = await apiGet(url)
@@ -74,4 +83,22 @@ export async function loadOrders(pddOrderNumber, status) {
     }
     const result = await apiGet(url, params)
     return result;
+}
+
+export async function addminAddOrder(data) {
+    const url = `/admin/order/add`
+    const result = await apiPost(url, data);
+    return result;
+}
+
+export async function deleteSelectedPhotos(pddOrderNumber, photoIds) {
+    const url = `/orders/${pddOrderNumber}/photos/deleteMultiple`
+    const result = await apiDelete(url, photoIds)
+}
+
+export function ifLoggedIn() {
+    const userLogin = getToken(TOKEN_KEYS.USER_LOGIN);
+    const accessToken = getToken(TOKEN_KEYS.ACCESS_TOKEN);
+
+    return (userLogin != null && accessToken != null);
 }

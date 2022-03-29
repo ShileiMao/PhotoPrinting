@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import ToastHelper from "../../utils/toastHelper"
 import myLogger from "../../utils/logger";
+
 
 const Checkmark = ({ selected }) => (
   <div
@@ -63,9 +65,9 @@ const SelectedImage = ({
   }
 
   const handleOnClick = e => {
-    setIsSelected(!isSelected);
-    appendSelected(photo, index, isSelected)
-    myLogger.debug("append photo: " + index)
+    const originalValue = isSelected;
+    setIsSelected(!originalValue);
+    appendSelected(photo, index, !originalValue);
   };
 
   useEffect(() => {

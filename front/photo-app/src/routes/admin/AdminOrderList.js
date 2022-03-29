@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { Outlet } from 'react-router-dom'
 import { OrderRow } from '../../Components/OrderRow'
 import { loadOrders } from '../../utils/apiHelper'
+import { withRouter } from '../../utils/react-router'
 
-export default class AdminOrderList extends Component {
+class AdminOrderList extends Component {
   constructor(props) {
       super(props)
       this.state = {
@@ -41,13 +41,14 @@ export default class AdminOrderList extends Component {
           <div id="page-inner">
         {/*  */}
 
-        <div class="panel panel-default">
-                <div class="panel-heading">
+        <div className="container">
+                <h3 className="text-lg-left text-info">
                     商品详情信息
-                </div>
-                <div class="panel-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-hover">
+                </h3>
+
+                <div>
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered table-hover text-info">
                             <thead>
                             <tr>
                                 <th>ID</th>
@@ -65,7 +66,7 @@ export default class AdminOrderList extends Component {
                             <tbody>
                             {
                                 this.state.data.map( (item, index) => {
-                                    return <OrderRow order={item} key={item.id} selectOrder={this.props.selectOrder} />
+                                    return <OrderRow order={item} props={this.props} key={item.id} selectOrder={this.props.selectOrder} />
                                 })
                             }
                             
@@ -92,3 +93,6 @@ export default class AdminOrderList extends Component {
     )
   }
 }
+
+
+export default withRouter(AdminOrderList);

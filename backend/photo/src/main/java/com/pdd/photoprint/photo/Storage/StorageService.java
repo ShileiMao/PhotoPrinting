@@ -12,6 +12,8 @@ public interface StorageService {
 
 	String store(MultipartFile file, String relativePath, String fileName, boolean override);
 
+	boolean delete(String relativePath, String fileName);
+
 	String[] storeMultiple(List<MultipartFile> fileList, String relativePath, List<String> fileNames, boolean override);
 
 	Stream<Path> loadAll(String relativePath);
@@ -24,4 +26,5 @@ public interface StorageService {
 	void deleteAll();
 
 	String getRootDirPath();
+
 }

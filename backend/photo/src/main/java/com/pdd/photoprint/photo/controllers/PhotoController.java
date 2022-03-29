@@ -11,13 +11,16 @@ import com.pdd.photoprint.photo.mapper.OrderMapper;
 import com.pdd.photoprint.photo.mapper.OrderPictureMapper;
 import com.pdd.photoprint.photo.mapper.PictureMapper;
 import com.pdd.photoprint.photo.model.OrderPicture;
+import com.pdd.photoprint.photo.services.PictureService;
 import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletRequest;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/orders")
@@ -31,10 +34,13 @@ public class PhotoController {
     @Autowired
     private OrderMapper orderMapper;
 
-//    private OrderHelper orderHelper;
+    private PictureService pictureService;
 
-    @Value("${serverDomain}")
-    private String serverBaseUrl;
+    @Autowired
+    public void setPictureService(PictureService pictureService) {
+        this.pictureService = pictureService;
+    }
+//    private OrderHelper orderHelper;
 
     @GetMapping("/{orderNumber}/photos")
     public RestResponse getOrderPhotos(@PathVariable String orderNumber) {
@@ -47,7 +53,7 @@ public class PhotoController {
             return response;
         }
 
-        List<PrintPhotoSummary> printPhotoSummary = orderPictureMapper.queryPicturesOfOrder(orderNumber, serverBaseUrl + "/files/download");
+        List<PrintPhotoSummary> printPhotoSummary = orderPictureMapper.queryPicturesOfOrder(orderNumber,"/files/download");
         response.setStatus(RestRepStatus.SUCCESS.name());
         response.setMessage("成功");
         response.setData(printPhotoSummary);
@@ -92,25 +98,47 @@ public class PhotoController {
             return response;
         }
 
+        return pictureService.deletOrderPicture(photoId, orderNumber);
+    }
+
+    @DeleteMapping("/{orderNumber}/photos/deleteMultiple")
+    public RestResponse deleteMultiplePhoto(@PathVariable("orderNumber") String orderNumber, @RequestBody String [] photoIds, ServletRequest request) {
+
+        OrderHelper orderHelper;
+        orderHelper = new OrderHelper(orderMapper);
+        RestResponse response = orderHelper.basicOrderInfoVerify(orderNumber);
+
+        if(Objects.equals(response.getStatus(), RestRepStatus.ERROR.name())) {
+            return response;
+        }
+        if(photoIds.length == 0) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("照片id为空");
+            return response;
+        }
+
         PddOrderSummary orderSummary = orderMapper.queryOrderByNumber(orderNumber);
 
         QueryWrapper<OrderPicture> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(OrderPicture::getPictureId, photoId);
+        queryWrapper.lambda().in(OrderPicture::getPictureId, photoIds);
         queryWrapper.lambda().eq(OrderPicture::getOrderId, orderSummary.getId());
 
-        OrderPicture orderPicture = orderPictureMapper.selectOne(queryWrapper);
-        if(orderPicture == null) {
+        List<OrderPicture> orderPictures = orderPictureMapper.selectList(queryWrapper);
+        if(orderPictures == null || orderPictures.isEmpty()) {
             response.setStatus(RestRepStatus.ERROR.name());
             response.setError("照片不存在");
             return response;
         }
 
+        // 删除所有订单的照片
         orderPictureMapper.delete(queryWrapper);
 
-        OrderPicture orderPicture1 = orderPictureMapper.selectOne(queryWrapper);
-        if(orderPicture1 == null) {
-            System.out.println("照片已不再使用，删除: " + photoId);
-            pictureMapper.deleteById(photoId);
+        // 删除所有照片
+        for(OrderPicture orderPicture : orderPictures) {
+            response = pictureService.deletePicture(orderPicture.getPictureId());
+            if(!response.checkResponse()) {
+                return response;
+            }
         }
 
         response.setStatus(RestRepStatus.SUCCESS.name());

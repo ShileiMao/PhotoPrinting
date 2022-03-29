@@ -12,7 +12,6 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-@AllArgsConstructor
 @TableName("post_addr")
 public class PostAddr {
     @TableId(value = "id", type = IdType.AUTO)

@@ -51,6 +51,24 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 	@Override
+	public boolean delete(String relativePath, String fileName) {
+		if(!fileExists(relativePath, fileName)) {
+			throw new StorageFileNotFoundException("文件不存在！");
+		}
+
+		Path relPath = Paths.get(relativePath);
+		Path filePath = rootLocation.resolve(relPath).resolve(fileName);
+		try {
+			Files.delete(filePath);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	@Override
 	public String[] storeMultiple(List<MultipartFile> fileList, String relativePath,
 							  @Nullable List<String>fileNames, boolean override) {
 		Path dirPath = this.rootLocation.resolve(relativePath);

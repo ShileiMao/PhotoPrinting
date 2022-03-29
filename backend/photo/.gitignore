@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+###### custom ####3
+upload-dir/*
+logs/*

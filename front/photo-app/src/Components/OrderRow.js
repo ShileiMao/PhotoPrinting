@@ -1,16 +1,15 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export const OrderRow = ({order, selectOrder}) => {
+export const OrderRow = ({props, order}) => {
   const navigate = useNavigate()
 
   const openOrder = () => {
     console.log("clicked: " + JSON.stringify(order))
-    selectOrder(order)
-    navigate('/admin/orders/detail')
+    navigate('/admin/orders/detail/' + order.pddOrderNumber)
   }
   return (
-    <tr>
+    <tr className='table-secondary'>
         <td>{order.id}</td>
         <td>{order.title}</td>
         <td>{order.description}</td>
@@ -20,7 +19,7 @@ export const OrderRow = ({order, selectOrder}) => {
         <td>{order.postAddressStr}</td>
         <td>{order.dateCreate}</td>
         <td>{order.status}</td>
-        <td><button onClick={openOrder}>查 看</button></td>
+        <td><button className='btn btn-success' onClick={openOrder}>查 看</button></td>
     </tr>
   )
 }

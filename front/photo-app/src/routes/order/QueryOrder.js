@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
-import { apiPost, apiGet } from '../../utils/apiHelper';
 import { get } from '../../utils/axios';
 import myLogger from '../../utils/logger'
-import { Link, Navigate, Outlet } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { storeToken } from '../../utils/token';
 import TOKEN_KEYS from '../../utils/consts';
@@ -34,11 +32,11 @@ export const QueryOrder = () => {
   }
 
   return (
-    <div className='center-page'>
-      <div class="card border-secondary mb-3">
-        <div class="card-header">订单查询</div>
-        <div class="card-body">
-          <h4 class="card-title">输入订单号</h4>
+    <div className='center-page container'>
+      <div className="card border-secondary mb-3">
+        <div className="card-header">订单查询</div>
+        <div className="card-body">
+          <h4 className="card-title">输入订单号</h4>
           <div className='input-group mb-3'>
             <input className='form-control' placeholder='输入订单号' type="text" value={orderNumber} onChange={updateOrder}></input>
             <button className='btn btn-primary' onClick={handleSubmit}>提交</button>

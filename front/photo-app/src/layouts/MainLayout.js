@@ -5,7 +5,7 @@ export const MainLayout = () => {
   return (
 
     <div>
-      <div className='bs-component'>
+      {/* <div className='bs-component'>
         <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
           <div className="container-fluid navbar-collapse collapse">
             <ul className='navbar-nav me-auto'>
@@ -14,8 +14,7 @@ export const MainLayout = () => {
             </ul>
           </div>
         </nav>
-      </div>
-
+      </div> */}
       <Outlet />
     </div>
   )

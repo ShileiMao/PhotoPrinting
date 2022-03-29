@@ -34,7 +34,7 @@ const NormalLayout = (props) => {
 
   return (
     <div>
-      <Gallery photos={allPhotos} renderImage={imageRenderer} />
+      <Gallery photos={allPhotos} direction='row' renderImage={imageRenderer} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 package com.pdd.photoprint.photo.Configs;
 
+
 public enum OrderPictureStatus {
 
     NEW(0, "新创建"),
@@ -17,6 +18,26 @@ public enum OrderPictureStatus {
 
     public Integer getValue() {
         return value;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public static OrderPictureStatus toRedableStatus(int status) {
+        switch(status) {
+            case 0:
+                return OrderPictureStatus.NEW;
+
+            case 1:
+                return OrderPictureStatus.PRINTED;
+
+            case 3:
+                return OrderPictureStatus.PRINT_FAIL;
+
+            default:
+                return OrderPictureStatus.NEW;
+        }
     }
 
 }

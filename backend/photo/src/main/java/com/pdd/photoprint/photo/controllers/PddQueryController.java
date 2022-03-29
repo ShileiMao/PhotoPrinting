@@ -44,6 +44,7 @@ public class PddQueryController {
             Users user = guaranteeUser(orderNumber);
             String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, orderNumber, userAccessTokenMapper);
 
+            summary.dbToRedableStatus();
             System.out.println("access token: " + accessToken);
 
             session.setAttribute("user_login", orderNumber);

@@ -3,6 +3,7 @@ package com.pdd.photoprint.photo.controllers;
 import com.pdd.photoprint.photo.Storage.StorageFileNotFoundException;
 import com.pdd.photoprint.photo.Storage.StorageService;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -11,8 +12,12 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 
+@Slf4j
 @RequestMapping("/files/download")
 @RestController
 public class DownloadController {
@@ -40,7 +45,10 @@ public class DownloadController {
         }
         int index = uri.indexOf("/files/download/");
 
-        String relativePath = uri.substring(index + "/files/download/".length(), uri.length() - filename.length());
+        String relativePath = uri.substring(index + "/files/download/".length());
+        relativePath = relativePath.substring(0, relativePath.length() - filename.length() - 1);
+        log.info("requesting file at location: " + relativePath + "/" + filename);
+
         Resource file = storageService.loadAsResource(relativePath, filename);
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
@@ -48,7 +56,12 @@ public class DownloadController {
 
     private String getUriFromRequest(ServletRequest request) {
         if(request instanceof HttpServletRequest) {
-            return ((HttpServletRequest) request).getRequestURI();
+            String uriStr = ((HttpServletRequest) request).getRequestURI();
+            try {
+                return URLDecoder.decode(uriStr, StandardCharsets.UTF_8.name());
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
         return "";
     }

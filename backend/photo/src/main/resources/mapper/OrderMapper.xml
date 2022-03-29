@@ -16,6 +16,8 @@
         <result column="addr_details" property="postAddrDetailStr"/>
         <result column="title" property="title"/>
         <result column="description" property="description"/>
+        <result column="photo_size" property="photoSize" />
+        <result column="packaging" property="packaging" />
     </resultMap>
 
     <select id="queryOrderByNumber" resultMap="BaseResultMap">

@@ -46,4 +46,11 @@ public class Orders {
 
     @TableField("num_photos")
     private Integer numPhotos;
+
+    @TableField("photo_size")
+    private String photoSize;
+
+
+    @TableField("packaging")
+    private String packaging;
 }

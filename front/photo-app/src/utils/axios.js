@@ -160,11 +160,10 @@ export function put(url, data = {}, params = {}) {
  * @param {string} url
  * @param {object} params
  */
-export function _delete(url, params = {}) {
-  return _axios({
-    method: 'delete',
-    url,
-    params,
+export function _delete(url, headers = {}, data = {}) {
+  return _axios.delete(url,{
+    headers: headers,
+    data: data
   })
 }
 

@@ -46,8 +46,6 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 @RequestMapping("/files")
 public class PictureUploadController {
-	@Value("${serverDomain}")
-	private String serverBaseUrl;
 
 	@Autowired
 	private OrderPictureMapper orderPictureMapper;
@@ -117,7 +115,7 @@ public class PictureUploadController {
 			return response;
 		}
 
-		if(orderSummary.getStatus() != OrderStatus.NEW.getValue()) {
+		if(orderSummary.getStatus() > OrderStatus.PRINTED.getValue()) {
 			response.setStatus(RestRepStatus.ERROR.name());
 			response.setError("订单不可编辑。");
 			return response;
@@ -163,7 +161,7 @@ public class PictureUploadController {
 		if(totalCopies == null) {
 			totalCopies = 0;
 		}
-		if(totalCopies + fileList.length >= orderSummary.getNumPhotos()) {
+		if(totalCopies + fileList.length > orderSummary.getNumPhotos()) {
 			response.setStatus(RestRepStatus.ERROR.name());
 			response.setError("照片达到最大数量，不可继续上传!");
 			return response;

@@ -1,6 +1,7 @@
 package com.pdd.photoprint.photo.VO;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.pdd.photoprint.photo.Configs.OrderPictureStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,4 +32,10 @@ public class PrintPhotoSummary {
     Integer width;
 
     Integer height;
+
+    String strStatus;
+
+    public void toStrStatus() {
+        this.strStatus = OrderPictureStatus.toRedableStatus(this.status).getDescription();
+    }
 }
