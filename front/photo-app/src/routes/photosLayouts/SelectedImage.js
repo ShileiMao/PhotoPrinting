@@ -74,10 +74,12 @@ const SelectedImage = ({
     setIsSelected(selected);
   }, [selected]);
 
+
+  console.log("photo status: " + JSON.stringify(photo))
   return (
     <div
       style={{ margin, height: photo.height, width: photo.width, ...cont }}
-      className={!isSelected ? "not-selected" : ""}
+      className={!isSelected ? "not-selected gallary-container" : "gallary-container"}
     >
       <Checkmark selected={isSelected ? true : false} />
       <img
@@ -88,6 +90,12 @@ const SelectedImage = ({
         {...photo}
         onClick={handleOnClick}
       />
+      {
+        photo.status === 1 &&
+        <div className="text-block"> 
+          <p>已打印</p>
+        </div>
+      }
       <style>{`.not-selected:hover{outline:2px solid #06befa}`}</style>
     </div>
   );

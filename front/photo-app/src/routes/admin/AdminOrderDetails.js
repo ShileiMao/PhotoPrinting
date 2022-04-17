@@ -1,15 +1,15 @@
 import React, { Component, useContext } from 'react'
 import { PrintLayout } from '../photosLayouts/PrintLayout';
-import { loadOrders, queryPhotos } from '../../utils/apiHelper';
+import { loadOrders, queryPhotos, toDataURL, updatePhotoStatus } from '../../utils/apiHelper';
 import myLogger from '../../utils/logger';
 import ReactToPrint from "react-to-print"
 import Config from '../../config/webConf';
 import NormalLayout from '../photosLayouts/NormalLayout';
 import { withRouter } from '../../utils/react-router';
 
-import '../../style/Printing.scss'
-
 import ic_print from '../../imgs/ic_print.svg'
+import OrderOverView from '../../Components/OrderOverView';
+import { Dialog } from '../../Components/Dialog';
 
 class AdminOrderDetails extends Component {
   constructor(props) {
@@ -17,31 +17,36 @@ class AdminOrderDetails extends Component {
       this.state = {
           order: null,
           allPhotos: [],
+          photoToPrint: [],
           selectAll: false,
-          orderNumber: this.props.match.params.orderNum
+          orderNumber: this.props.match.params.orderNum,
+          showAlert: false
       }
-      const orderNumber = this.props.match.params.orderNum;
+      // const orderNumber = this.props.match.params.orderNum;
 
-      console.log("params: " + orderNumber);
       this.refreshPhotoList = this.refreshPhotoList.bind(this);
       this.appendSelected = this.appendSelected.bind(this);
+      this.getpageStyle = this.getpageStyle.bind(this);
+      this.downloadPrintintImages = this.downloadPrintintImages.bind(this);
+      this.photoPrintFinished = this.photoPrintFinished.bind(this);
+      this.setAlertShow = this.setAlertShow.bind(this);
+      this.printedAlertCancel = this.printedAlertCancel.bind(this);
+      this.printedAlertConfirm = this.printedAlertConfirm.bind(this);
   }
-
   
   async refreshPhotoList() {
     const result = await loadOrders(this.state.orderNumber);
-    console.log("result: " + JSON.stringify(result))
     if(result.status.toLowerCase() === 'error') {
         console.log("error loading order: " + result.error);
         return;
     }
+    console.log("order: " + JSON.stringify(result.data));
     this.setState({
         order: result.data[0]
     })
 
     let response = await queryPhotos(this.state.orderNumber)
     
-    myLogger.debug("order response: " + JSON.stringify(response))
     if(response.status.toLowerCase() === 'error') {
       this.setState({allPhotos: []}) 
       return
@@ -76,41 +81,119 @@ class AdminOrderDetails extends Component {
     this.refreshPhotoList()
   }
 
+  getpageStyle() {
+    const pageStyle = `
+      @page {
+        size: 80mm 50mm;
+      }
+
+      @media all {
+        .pagebreak {
+          display: none;
+        }
+      }
+
+      @media print {
+        .pagebreak {
+          page-break-before: always;
+        }
+      }
+    `;
+
+    return pageStyle;
+  }
+
+  async downloadPrintintImages() {
+    const selectedPhotos = this.state.allPhotos.filter(photo => {
+      return photo.isSelected === true;
+    });
+
+    const array = selectedPhotos.filter(item => {
+      return item.isSelected === true;
+    })
+    /*
+    const array = await Promise.all(selectedPhotos.map(async (element) => {
+      const imageURL = element.src;
+      const imageData = await toDataURL(imageURL);
+      console.log("image data: " + imageData);
+
+      return imageData;
+    }));
+    */
+    this.setState({
+      photoToPrint: array
+    });
+    console.log("photo print finished: " );
+  }
+
+  async photoPrintFinished(params) {
+    console.log("photo print finished: " + params);
+    this.setState({
+      showAlert: true
+    })
+  }
+
+  setAlertShow(show) {
+    this.setState({
+      showAlert: show
+    });
+  }
+
+  getPrintFinishedDialog() {
+    return(<>
+      照片已打印？
+    </>)
+  }
+
+  printedAlertCancel() {
+
+  }
+
+  async printedAlertConfirm() {
+    await Promise.all(this.state.photoToPrint.map(async (element) => {
+      const imageId = element.pictureId;
+      const orderNum = element.pddOrderNumber;
+
+      await updatePhotoStatus(orderNum, imageId, 1);
+    }));
+    
+    window.location.reload()
+    // this.forceUpdate();
+  }
+
   render() {
     return (
         <div className="Order-Overview-Container">
-        
         {
           this.state.order &&
           <div>
-              <div className="order-overview">
-                  <div>
-                      <span>{this.state.order.title}</span>
-                  </div>
-                  <div>
-                      <span>{this.state.order.numPhotos}</span>
-                  </div>
-                  <div>
-                      <span>{this.state.order.description}</span>
-                  </div>
-              </div>
+              <OrderOverView order={this.state.order} photoCount={this.state.allPhotos.length} />
 
               <div className='preview-container'>
                 <NormalLayout images={this.state.allPhotos} selectAll={this.state.selectAll} appendSelected={this.appendSelected}/>
               </div>
 
-              <div className='print-container'>
-                  <PrintLayout images={this.state.allPhotos} 
+              <div>
+                  <PrintLayout images={this.state.photoToPrint} 
                   selectAll={false} 
                   appendSelected={this.appendSelected} 
                   ref={el => (this.componentRef = el)}/>
               </div>
-              
-              
+              {
+                this.state.showAlert &&
+                <Dialog show={this.state.showAlert} 
+                  setShow={this.setAlertShow} 
+                  generateContent={this.getPrintFinishedDialog} 
+                  title="更新状态？" 
+                  cancelClicked={this.printedAlertCancel} 
+                  confirmClicked={this.printedAlertConfirm} />
+              }
               <div z-index="1000" className="Bottom-Floating-Options">
                 <ReactToPrint
                   trigger={() => { return <a href='#'><img src={ic_print} style={{width: `45px`, height: `45px`}}></img></a>}}
                   content={() => this.componentRef}
+                  onBeforeGetContent={this.downloadPrintintImages}
+                  onAfterPrint={this.photoPrintFinished}
                 >
                 </ReactToPrint>
               </div>

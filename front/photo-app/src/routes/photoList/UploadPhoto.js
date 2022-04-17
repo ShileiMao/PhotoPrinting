@@ -47,7 +47,7 @@ export default class UploadPhoto extends Component {
     });
 
     const response = await uploadImage(files, url, this.props.orderNumber);
-    if(response.status != 'success') {
+    if(response.status.toLowerCase() !== 'success') {
       ToastHelper.showError(response.error || "上传失败");
       return;
     }
@@ -62,6 +62,9 @@ export default class UploadPhoto extends Component {
     const imageFiles = [];
     const maxNumber = 10;
     
+    const getImageItem = () => {
+      
+    }
     return (
       <>
         <ImageUploading
@@ -82,32 +85,37 @@ export default class UploadPhoto extends Component {
           }) => (
             // write your building UI
             <div className="card border-secondary mb-3" >
+              <div className="card-header">上传照片</div>
               <div className="card-body">
                   <button
-                  className='btn-secondary'
+                  className='btn btn-secondary btn-sm'
                   style={isDragging ? { color: 'red' } : undefined}
                   onClick={onImageUpload}
                   {...dragProps}
                 >
-                  上传
+                  上 传
                 </button>
                 &nbsp;
                 {
                   this.state.images.length > 0 &&
-                  <button className='btn-secondary' onClick={onImageRemoveAll}>删除所有</button>
+                  <button className='btn btn-secondary btn-sm' onClick={onImageRemoveAll}>删除所有</button>
                 }
-
-                <button className='btn-secondary' onClick={this.props.hideUpload}>返回</button>
+                &nbsp;
+                <button className='btn btn-secondary btn-sm' onClick={this.props.hideUpload}>返回</button>
                 
-                {imageList.map((image, index) => (
-                  <div key={index} className="image-item">
-                    <img src={image['data_url']} alt="" width="100" />
-                    <div className="image-item__btn-wrapper">
-                      <button onClick={() => onImageUpdate(index)}>修改</button>
-                      <button onClick={() => onImageRemove(index)}>删除</button>
-                    </div>
-                  </div>
-                ))}
+                <div className='upload-container'>
+                  {
+                    imageList.map((image, index) => (
+                      <div key={index} className="image-item">
+                        <img src={image['data_url']} alt="" width="100" />
+                        <div className="image-item__btn-wrapper">
+                          <button className='btn btn-secondary btn-sm' onClick={() => onImageUpdate(index)}>修改</button>
+                          <button className='btn btn-secondary btn-sm' onClick={() => onImageRemove(index)}>删除</button>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
             </div>
           )}
@@ -116,7 +124,7 @@ export default class UploadPhoto extends Component {
         {
           this.state.images.length > 0 &&
           <div>
-            <button onClick={this.uploadAll}>
+            <button className='btn btn-primary btn-sm' onClick={this.uploadAll}>
               上传
             </button>
           </div>

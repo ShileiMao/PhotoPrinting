@@ -3,23 +3,24 @@ import { getToken } from "./token";
 import TOKEN_KEYS from "./consts";
 import { param } from "express/lib/request";
 import axios from "axios";
+import { StringUtils } from "./StringUtils";
 
 function getAuthenticationHeaders() {
     let access_token = getToken(TOKEN_KEYS.ACCESS_TOKEN);
     let user_login = getToken(TOKEN_KEYS.USER_LOGIN)
     let user_type = getToken(TOKEN_KEYS.USER_TYPE)
 
-    if(access_token == null || access_token == undefined) {
+    if(access_token === null || access_token === undefined) {
         console.log("no access token!")
         throw new Error("No access token!")
     }
 
-    if(user_login == null || user_login == undefined) {
+    if(user_login === null || user_login === undefined) {
         console.log("no user login")
         throw new Error("No user login!")
     }
 
-    if(user_type == null || user_type == undefined) {
+    if(user_type === null || user_type === undefined) {
         console.log("no user type")
         throw new Error("No user type!")
     }
@@ -32,10 +33,17 @@ function getAuthenticationHeaders() {
 }
 
 export function apiGet(url, params = {}) {
-   let authHeaders = getAuthenticationHeaders()
+    let authHeaders = getAuthenticationHeaders()
 
     let params1 = {...params, ...authHeaders}
     return get(url, params1);
+}
+
+export function apiPut(url, params = {}) {
+    let authHeaders = getAuthenticationHeaders()
+
+    let params1 = {...params, ...authHeaders}
+    return put(url, params1);
 }
 
 export function apiPost(url, data = {}, params = {}) {
@@ -55,6 +63,12 @@ export function apiDelete(url, data = {}, params = {}) {
 export async function queryPhotos(pddOrderNumber) {
     const url = `/orders/${pddOrderNumber}/photos`
     const response = await apiGet(url)
+    return response;
+}
+
+export async function updatePhotoStatus(pddOrderNumber, photoId, status) {
+    const url = `/orders/${pddOrderNumber}/photos/${photoId}/editStatus/${status}`
+    const response = await apiPut(url)
     return response;
 }
 
@@ -78,15 +92,84 @@ export async function loadOrders(pddOrderNumber, status) {
         params.pddOrderNumber = pddOrderNumber;
     }
 
-    if(status != -1) {
+    if(status !== -1) {
         params.status = status
     }
     const result = await apiGet(url, params)
     return result;
 }
 
+/**
+ * 
+ * @param {Integer} status 订单状态
+ * @param {Integer} pageIndex 页面编号
+ * @param {Integer} pageSize 页面大小
+ * @param {String} orderBy 排序
+ * @param {Boolean} desc 是否降序
+ * @param {String} searchText 搜索关键词
+ * @param {Date} startDate 开始日期
+ * @param {Date} endDate 结束日期
+ * @returns 
+ */
+export async function loadOrdersPage(status, pageIndex, pageSize, orderBy, desc, searchText, startDate, endDate) {
+    const url = "/admin/orders/pageAll"
+    const params = {}
+    if(status != null) {
+        params.orderStatus = status;
+    }
+
+    params.pageIndex = pageIndex || 0
+    params.pageSize = pageSize || 10
+    
+    if(!StringUtils.isEmpty(orderBy)) {
+        params.orderBy = orderBy
+    }
+
+    if(desc !== null) {
+        params.desc = desc;
+    }
+    
+    if(!StringUtils.isEmpty(searchText)) {
+        params.searchText = searchText;
+    }
+
+    if(startDate !== null) {
+        params.startDate = startDate;
+    }
+
+    if(endDate !== endDate) {
+        params.endDate = endDate;
+    }
+
+    const result = await apiGet(url, params)
+    return result;
+}
+
+export async function customerQueryOrder(orderNumber) {
+    const response = await get("/pdd/queryOrder", {order_number: orderNumber})
+    return response;
+}
+
+export async function customerAddOrder(data) {
+    const url = `/pdd/order/add`
+    const result = await apiPost(url, data);
+    return result;
+}
+
+export async function customerEditOrder(data) {
+    const url = `/pdd/order/edit`
+    const result = await apiPost(url, data);
+    return result;
+}
+
 export async function addminAddOrder(data) {
     const url = `/admin/order/add`
+    const result = await apiPost(url, data);
+    return result;
+}
+
+export async function adminEditOrder(data) {
+    const url = `/admin/order/edit`
     const result = await apiPost(url, data);
     return result;
 }
@@ -102,3 +185,23 @@ export function ifLoggedIn() {
 
     return (userLogin != null && accessToken != null);
 }
+
+export function getLoggedInUser() {
+    const userLogin = getToken(TOKEN_KEYS.USER_LOGIN);
+    const accessToken = getToken(TOKEN_KEYS.ACCESS_TOKEN);
+
+    return {
+        name: userLogin,
+        token: accessToken
+    };
+}
+
+
+export const toDataURL = url => fetch(url)
+    .then(response => response.blob())
+    .then(blob => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+    }))

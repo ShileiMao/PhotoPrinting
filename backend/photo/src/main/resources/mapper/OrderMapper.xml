@@ -18,6 +18,7 @@
         <result column="description" property="description"/>
         <result column="photo_size" property="photoSize" />
         <result column="packaging" property="packaging" />
+        <result column="phone_number" property="phoneNumber" />
     </resultMap>
 
     <select id="queryOrderByNumber" resultMap="BaseResultMap">
@@ -46,5 +47,41 @@
 <!--        <if test="dateEnd != null">-->
 <!--            and order.date_create < #{dateEnd}-->
 <!--        </if>-->
+    </select>
+
+
+    <select id="queryOrderPage" resultMap="BaseResultMap">
+        select orders.*,
+        post_addr.address, post_addr.addr_details
+        from orders join post_addr on orders.post_addr = post_addr.id
+        where 1 = 1
+
+        <if test="orderStatus != null">
+            and orders.status = #{orderStatus}
+        </if>
+
+        <if test="startDate != null">
+            and order.date_create > (#{startDate,jdbcType=TIMESTAMP})
+        </if>
+
+        <if test="endDate != null">
+            <![CDATA[and order.date_create < (#{endDate,jdbcType=TIMESTAMP})]]>
+        </if>
+
+        <if test="searchText != null">
+            and (orders.pdd_order_number like '%' + #{searchPattern} '%'
+            or title like '%' + #{searchPattern} '%'
+            or description like '%' + #{searchPattern} '%'
+            or phone_number like '%' + #{searchPattern} '%')
+        </if>
+
+        <if test="orderBy != null">
+            order by #{orderBy}
+        </if>
+
+        <if test="desc == true">
+            desc
+        </if>
+
     </select>
 </mapper>

@@ -1,6 +1,7 @@
 package com.pdd.photoprint.photo.controllers;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageInfo;
 import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
@@ -8,6 +9,7 @@ import com.pdd.photoprint.photo.Configs.UserType;
 import com.pdd.photoprint.photo.DTO.AddOrderDTO;
 import com.pdd.photoprint.photo.DTO.LoginDetails;
 import com.pdd.photoprint.photo.Utils.AccessTokenGenerator;
+import com.pdd.photoprint.photo.Utils.OrderHelper;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
 import com.pdd.photoprint.photo.VO.ResponseUserDetails;
 import com.pdd.photoprint.photo.VO.RestResponse;
@@ -18,6 +20,8 @@ import com.pdd.photoprint.photo.mapper.UserMapper;
 import com.pdd.photoprint.photo.model.Orders;
 import com.pdd.photoprint.photo.model.PostAddr;
 import com.pdd.photoprint.photo.model.Users;
+import com.pdd.photoprint.photo.services.OrderService;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -37,11 +41,13 @@ public class AdminController {
 
     private UserAccessTokenMapper userAccessTokenMapper;
 
-    private OrderMapper orderMapper;
+//    private OrderMapper orderMapper;
 
     private PostAddrMapper postAddrMapper;
 
     Logger logger = LoggerFactory.getLogger(AdminController.class);
+
+    private OrderService orderService;
 
     @Autowired
     public void setUserMapper(UserMapper userMapper) {
@@ -53,14 +59,19 @@ public class AdminController {
         this.userAccessTokenMapper = userAccessTokenMapper;
     }
 
-    @Autowired
-    public void setOrderMapper(OrderMapper orderMapper) {
-        this.orderMapper = orderMapper;
-    }
+//    @Autowired
+//    public void setOrderMapper(OrderMapper orderMapper) {
+//        this.orderMapper = orderMapper;
+//    }
 
     @Autowired
     public void setPostAddrMapper(PostAddrMapper postAddrMapper) {
         this.postAddrMapper = postAddrMapper;
+    }
+
+    @Autowired
+    public void setOrderService(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @PostMapping("/login")
@@ -119,11 +130,11 @@ public class AdminController {
                                        @RequestParam(value = "startDate", required = false) Date startDate,
                                        @RequestParam(value = "endDate", required = false) Date endDate) {
 
-        List<PddOrderSummary> orderSummaryList = orderMapper.queryOrder(pddOrderNumber, orderStatus);
+        List<PddOrderSummary> orderSummaryList = orderService.getOrderMapper().queryOrder(pddOrderNumber, orderStatus);
 
-        for (PddOrderSummary order: orderSummaryList) {
-            order.dbToRedableStatus();
-        }
+//        for (PddOrderSummary order: orderSummaryList) {
+//            order.dbToRedableStatus();
+//        }
 
         RestResponse response = new RestResponse();
         response.setStatus(RestRepStatus.SUCCESS.name());
@@ -132,85 +143,67 @@ public class AdminController {
         return response;
     }
 
+    @GetMapping("/orders/pageAll")
+    public RestResponse queryAllOrders(@RequestParam(value = "pageIndex", required = false, defaultValue = "0") Integer page,
+                                       @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+                                       @RequestParam(value = "orderStatus", required = false) Integer orderStatus,
+                                       @RequestParam(value = "orderBy", required = false) String orderBy,
+                                       @RequestParam(value = "desc", required = false) boolean desc,
+                                       @RequestParam(value = "searchText", required = false) String searchText,
+                                       @RequestParam(value = "startDate", required = false) Date startDate,
+                                       @RequestParam(value = "endDate", required = false) Date endDate) {
+
+        RestResponse response = new RestResponse();
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setMessage("成功");
+
+        PageInfo<PddOrderSummary> orderSummaryList = orderService.queryOrderPage(page, pageSize, orderStatus, orderBy, desc, searchText, startDate, endDate);
+        response.setData(orderSummaryList);
+
+        return response;
+    }
+
     @PostMapping("/order/add")
     public RestResponse addOrder(@RequestBody AddOrderDTO addOrderDTO) {
-        RestResponse response = validateAddOrderFields(addOrderDTO);
+        OrderHelper orderHelper = new OrderHelper(this.orderService.getOrderMapper(), this.postAddrMapper);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        if(!response.checkResponse()) {
+            return response;
+        }
+        response = orderHelper.addOrder(addOrderDTO);
+        return response;
+    }
+
+    @PostMapping("/order/edit")
+    public RestResponse editOrder(@RequestBody AddOrderDTO addOrderDTO) {
+        OrderHelper orderHelper = new OrderHelper(this.orderService.getOrderMapper(), this.postAddrMapper);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
         if(!response.checkResponse()) {
             return response;
         }
 
-        QueryWrapper<Orders> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(Orders::getPddOrderNumber, addOrderDTO.getPddOrderNumber());
+        response = orderHelper.editOrder(addOrderDTO);
 
-        response = new RestResponse();
-        Orders order = orderMapper.selectOne(queryWrapper);
-        if(order != null) {
-            response.setError("订单已存在，不可重复添加！");
-            return response;
-        }
-
-        PostAddr postAddr = new PostAddr();
-        postAddr.setAddress(addOrderDTO.getAddress());
-        postAddr.setAddrDetails(addOrderDTO.getAddressDetails());
-
-        this.postAddrMapper.insert(postAddr);
-
-
-        Orders newOrder = new Orders();
-        newOrder.setPddOrderNumber(addOrderDTO.getPddOrderNumber());
-        newOrder.setStatus(addOrderDTO.getStatus().getValue());
-        newOrder.setTitle(addOrderDTO.getTitle());
-        newOrder.setDescription(addOrderDTO.getDescription());
-        newOrder.setNumPhotos(addOrderDTO.getNumPhotos());
-        newOrder.setPhotoSize(addOrderDTO.getPhotoSize().getValue());
-        newOrder.setPackaging(addOrderDTO.getPackaging().getValue());
-        newOrder.setPostAddr(postAddr.getId());
-
-        this.orderMapper.insert(newOrder);
-
-        response.setMessage("成功！");
-        response.setStatus(RestRepStatus.SUCCESS.name());
         return response;
     }
 
-    private RestResponse validateAddOrderFields(AddOrderDTO addOrderDTO) {
+
+
+
+    @GetMapping("/queryOrder")
+    RestResponse queryOrder(@RequestParam("order_number") String orderNumber, HttpSession session) throws NoSuchAlgorithmException {
         RestResponse response = new RestResponse();
-        if(StringUtils.isEmpty(addOrderDTO.getPddOrderNumber())) {
-            response.setError("请输入订单号");
+        PddOrderSummary summary = this.orderService.getOrderMapper().queryOrderByNumber(orderNumber);
+        if(summary != null) {
+//            summary.dbToRedableStatus();
+            summary.setUserType(UserType.ANONYMOUS.getType());
+
+            response.setStatus(RestRepStatus.SUCCESS.name());
+            response.setData(summary);
             return response;
         }
 
-        if(addOrderDTO.getNumPhotos() <= 0) {
-            response.setError("请输入照片数量");
-            return response;
-        }
-
-        if(addOrderDTO.getStatus() == null) {
-            response.setError("请选择订单状态");
-            return response;
-        }
-
-        if(StringUtils.isEmpty(addOrderDTO.getAddress())) {
-            response.setError("请输入邮寄地址");
-            return response;
-        }
-
-        if(StringUtils.isEmpty(addOrderDTO.getAddressDetails())) {
-            response.setError("请输入邮寄地址");
-            return response;
-        }
-
-        if(StringUtils.isEmpty(addOrderDTO.getTitle())) {
-            response.setError("请输入标题");
-            return response;
-        }
-
-        if(addOrderDTO.getPhotoSize() == null) {
-            response.setError("请选择照片尺寸");
-            return response;
-        }
-
-        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setError("订单信息不存在!");
         return response;
     }
 }

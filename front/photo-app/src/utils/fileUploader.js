@@ -1,5 +1,4 @@
-import { apiGet, apiPost } from './apiHelper'
-import myLogger from './logger';
+import { apiPost } from './apiHelper'
 
 export async function uploadImage(images, url, orderNumber) {
   const formData = new FormData();

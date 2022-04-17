@@ -34,3 +34,65 @@
   z-index: 10;
   position: relative;
 }
+
+.full-screen {
+  height: 100vh; 
+  width: 100%;
+}
+
+.test-main {
+  background-color: rebeccapurple;
+}
+
+/* .center-page {
+  min-width: 50%;
+  padding: 15px;
+  position: relative;
+  top: 50vh;
+  left: 50%;
+  -ms-transform: translateX(-50%) translateY(-50%);
+  -webkit-transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%);
+}    */
+
+.gallary-container {
+  position: relative;
+}
+
+/* Bottom right text */
+.text-block {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.713);
+  color: white;
+  font-size: smaller;
+  text-align: center;
+}
+
+.upload-container {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  flex-flow: flow;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  position: relative;
+}
+
+.image-item {
+  size: 120px 120px;
+  flex-direction: column;
+  flex-wrap: wrap;
+  flex: 1 1 120px;
+}
+
+.image-item__btn-wrapper {
+  position: absolute;
+  bottom: 0px;
+  background-color: rgba(0, 0, 0, 0.713);
+  color: white;
+}

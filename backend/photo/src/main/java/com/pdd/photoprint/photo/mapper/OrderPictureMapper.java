@@ -13,6 +13,8 @@ public interface OrderPictureMapper extends BaseMapper<OrderPicture> {
     List<PrintPhotoSummary>queryPicturesOfOrder1();
     void updateNumCopies(Integer orderId, Integer pictureId, Integer numCopies);
 
+    void updateStatus(Integer orderId, Integer pictureId, Integer status);
+
     Integer queryTotalPictures(String orderNumber);
     Integer queryTotalPicturesExcept(String orderNumber, Integer pictureId);
 }

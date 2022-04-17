@@ -22,6 +22,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
         String userType = request.getHeader("user_type");
 
         boolean isValid = userTokenValidator.validateToken(userLogin, token, userType);
+        
         return isValid;
     }
 }

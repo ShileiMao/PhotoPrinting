@@ -53,4 +53,7 @@ public class Orders {
 
     @TableField("packaging")
     private String packaging;
+
+    @TableField("phone_number")
+    private String phoneNumber;
 }

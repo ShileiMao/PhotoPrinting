@@ -9,7 +9,8 @@ const NormalLayout = (props) => {
     return {
       src: item.src,
       width: item.width,
-      height: item.height
+      height: item.height,
+      status: item.status
     }
   })
 

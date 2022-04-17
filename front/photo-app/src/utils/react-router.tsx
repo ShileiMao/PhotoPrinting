@@ -1,8 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ComponentType } from 'react';
-import { NavigateFunction, useLocation, useNavigate, useParams } from "react-router";
-import AdminOrderDetails from "../routes/admin/AdminOrderDetails";
-
+import { useLocation, useNavigate, useParams } from "react-router";
 
 export interface WithRouterProps<T = ReturnType<typeof useParams>> {
   history: {

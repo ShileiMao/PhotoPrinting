@@ -42,4 +42,10 @@
         where picture_id = #{pictureId}
         and order_id = #{orderId}
     </update>
+
+    <update id="updateStatus">
+        update order_picture set status = #{status}
+        where picture_id = #{pictureId}
+        and order_id = #{orderId}
+    </update>
 </mapper>

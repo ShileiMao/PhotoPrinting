@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { userLogin } from '../../utils/apiHelper'
 import TOKEN_KEYS from '../../utils/consts'
 import { storeToken } from '../../utils/token'
@@ -13,7 +13,7 @@ export const Login = (props) => {
   
   const navigate = useNavigate();
 
-  const [currentUri, setCurrentUri] = useOutletContext()
+//   const [currentUri, setCurrentUri] = useOutletContext()
  
   const performLogin = async () => {
     const response = await userLogin(userName, password);
@@ -22,7 +22,6 @@ export const Login = (props) => {
         return;
     }
 
-    console.log("success: " + JSON.stringify(response));
     storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.accessToken);
     storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.accessToken);
     storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
@@ -35,6 +34,8 @@ export const Login = (props) => {
     props.setUser(user);
     navigate("/admin/orders")
   }
+
+  console.log("showing login  page ....");
 
   return (
     <div className="container">

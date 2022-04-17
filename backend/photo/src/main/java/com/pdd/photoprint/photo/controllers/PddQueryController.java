@@ -1,20 +1,22 @@
 package com.pdd.photoprint.photo.controllers;
 
+import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
 import com.pdd.photoprint.photo.Configs.UserType;
+import com.pdd.photoprint.photo.DTO.AddOrderDTO;
 import com.pdd.photoprint.photo.Utils.AccessTokenGenerator;
 import com.pdd.photoprint.photo.Utils.DateHelper;
+import com.pdd.photoprint.photo.Utils.OrderHelper;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
+import com.pdd.photoprint.photo.VO.RestResponse;
 import com.pdd.photoprint.photo.mapper.OrderMapper;
+import com.pdd.photoprint.photo.mapper.PostAddrMapper;
 import com.pdd.photoprint.photo.mapper.UserAccessTokenMapper;
 import com.pdd.photoprint.photo.mapper.UserMapper;
 import com.pdd.photoprint.photo.model.UserAccessToken;
 import com.pdd.photoprint.photo.model.Users;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.util.DateUtils;
 
 import javax.servlet.http.HttpSession;
@@ -35,16 +37,20 @@ public class PddQueryController {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private PostAddrMapper postAddrMapper;
 
     @GetMapping("/queryOrder")
-    PddOrderSummary queryOrder(@RequestParam("order_number") String orderNumber, HttpSession session) throws NoSuchAlgorithmException {
+    RestResponse queryOrder(@RequestParam("order_number") String orderNumber, HttpSession session) throws NoSuchAlgorithmException {
+
+        RestResponse response = new RestResponse();
 
         PddOrderSummary summary = orderMapper.queryOrderByNumber(orderNumber);
         if(summary != null) {
             Users user = guaranteeUser(orderNumber);
             String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, orderNumber, userAccessTokenMapper);
 
-            summary.dbToRedableStatus();
+//            summary.dbToRedableStatus();
             System.out.println("access token: " + accessToken);
 
             session.setAttribute("user_login", orderNumber);
@@ -53,10 +59,41 @@ public class PddQueryController {
 
             summary.setUserType(UserType.ANONYMOUS.getType());
             summary.setAccessToken(accessToken);
-            return summary;
+
+            response.setStatus(RestRepStatus.SUCCESS.name());
+            response.setMessage("成功!");
+            response.setData(summary);
+            return response;
         }
+
         // TODO: query from pdd
-        return null;
+        response.setError("订单不存在!");
+        return response;
+    }
+
+
+    @PostMapping("/order/add")
+    public RestResponse addOrder(@RequestBody AddOrderDTO addOrderDTO) {
+        OrderHelper orderHelper = new OrderHelper(this.orderMapper, this.postAddrMapper);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        if(!response.checkResponse()) {
+            return response;
+        }
+        response = orderHelper.addOrder(addOrderDTO);
+        return response;
+    }
+
+    @PostMapping("/order/edit")
+    public RestResponse editOrder(@RequestBody AddOrderDTO addOrderDTO) {
+        OrderHelper orderHelper = new OrderHelper(this.orderMapper, this.postAddrMapper);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        if(!response.checkResponse()) {
+            return response;
+        }
+
+        response = orderHelper.editOrder(addOrderDTO);
+
+        return response;
     }
 
     private Users guaranteeUser(String orderNumber) {

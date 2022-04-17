@@ -27,7 +27,8 @@ public class AppConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requestInterceptor)
                 .excludePathPatterns("/pdd/queryOrder")
-                .excludePathPatterns("/admin/login");
+                .excludePathPatterns("/admin/login")
+                .excludePathPatterns("/pdd/order/add");
 
         registry.addInterceptor(this.requestLogInterceptor);
     }

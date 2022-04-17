@@ -1,7 +1,7 @@
 // ajax 封装插件, 使用 axios
 import axios from 'axios'
-import { getToken, removeToken, saveAccessToken } from './token'
 import webConf from '../config/webConf'
+import ToastHelper from './toastHelper';
 
 
 const config = {
@@ -12,7 +12,6 @@ const config = {
   // 定义可获得的http响应状态码
   // return true、设置为null或者undefined，promise将resolved,否则将rejected
   validateStatus(status) {
-    console.log("status: " + status);
     return status >= 200 && status < 510
   },
 }
@@ -82,8 +81,6 @@ _axios.interceptors.request.use(
       /* eslint-disable-next-line */
       console.warn(`其他请求类型: ${reqConfig.method}, 暂无自动处理`)
     }
-
-    console.log("axios intercept calling ... configs: " + JSON.stringify(reqConfig));
     return reqConfig
   },
   error => {
@@ -100,7 +97,7 @@ _axios.interceptors.response.use(
       return res.data
     }
     return new Promise(async (resolve, reject) => {
-      const { url } = res.config
+      // const { url } = res.config
 
       if (res.config.handleError) {
         return reject(res)
@@ -110,6 +107,9 @@ _axios.interceptors.response.use(
   },
   error => {
     // 判断请求超时
+    if(error.code === 'ECONNABORTED' && error.message.indexOf(webConf.TIMEOUT_MSG) !== -1) {
+      ToastHelper.showError(webConf.TIMEOUT_MSG);
+    }
     console.log("请求失败: " + error)
     return Promise.reject(error)
   },
@@ -139,6 +139,7 @@ export function get(url, params = {}) {
     method: 'get',
     url,
     params,
+    timeoutErrorMessage: webConf.TIMEOUT_MSG
   })
 }
 

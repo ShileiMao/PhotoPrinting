@@ -1,5 +1,3 @@
-
-
 export const OrderStatus = [
   {
     value: `NEW`,
@@ -58,6 +56,53 @@ export const OrderStatus = [
   },
 ]
 
+/**
+ * 由于Java的enum类型自动转换，需要将数据库存储类型转换成定义的Enum名称，所以此处需要转换一下
+ * @param {Integer} dbValue 数据库中存储的值
+ * 
+ * @returns 后台定义的枚举类型名称
+ */
+export const parsOrderStatusDbValue = (dbValue) => {
+  switch(dbValue) {
+    case 0:
+      return `NEW`;
+
+      case 1:
+        return `PRINTED`;
+
+      case 2:
+        return `POSTED`;
+
+      case 3:
+        return `COLLECTED`;
+
+      case 4:
+        return `CONFIRMED`;
+
+      case 5:
+        return `FINISH`;
+
+      case 6:
+        return `REPORT_WAITING`;
+
+      case 7:
+        return `REPORT_WAITING`;
+
+      case 8:
+        return `REPORT_PROCESSING`;
+
+      case 9:
+        return `REPORT_PROCESSED`;
+
+      case 10:
+        return `REPORT_REJECTED`;
+
+      default:
+        return `NEW`;
+
+  }
+}
+
 
 export const Packaging = [
   {
@@ -77,6 +122,20 @@ export const Packaging = [
   },
 ]
 
+
+export const parsePackagingDbValue = (dbValue) => {
+  switch (dbValue) {
+    case `default`:
+      return `DEFAULT`;
+    case `plastic`:
+      return `PLASTIC`;
+    case `suede`:
+      return `suede`;
+
+    default:
+      return `DEFAULT`;
+  }
+}
 
 export const PhotoSize = [
   {
@@ -112,6 +171,31 @@ export const PhotoSize = [
 ]
 
 
+export const parsePhotoSizeDbValue = (dbValue) => {
+  switch(dbValue) {
+    case `default`:
+      return `DEFAULT`;
+    case `3inch`:
+      return `THREE_INCH`;
+    case `4inch`:
+      return `FOUR_INCH`;
+
+    case `5inch`:
+      return `FIVE_INCH`;
+
+    case `6inch`:
+      return `SIX_INCH`;
+
+    case `7inch`:
+      return `SEVEN_INCH`;
+      
+    default:
+      return `DEFAULT`;
+      
+
+  }
+}
+
 export const PhotoPrintStatus = [
   {
     value: `NEW`,
@@ -129,3 +213,15 @@ export const PhotoPrintStatus = [
     text: '打印失败'
   },
 ]
+
+export const parsePhotoPrintStatusDbValue = (dbValue) => {
+  switch(dbValue) {
+    case 0:
+      return `NEW`;
+    case 1:
+      return `PRINTED`;
+
+    case 3:
+      return `PRINT_FAIL`;
+  }
+}

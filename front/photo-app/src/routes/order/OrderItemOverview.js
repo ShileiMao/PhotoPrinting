@@ -6,6 +6,7 @@ import UploadPhoto from '../photoList/UploadPhoto'
 import { deleteSelectedPhotos, queryPhotos } from '../../utils/apiHelper'
 import Config from '../../config/webConf'
 import ToastHelper from '../../utils/toastHelper'
+import OrderOverView from '../../Components/OrderOverView'
 
 
 export default class OrderItemOverview extends Component {
@@ -92,26 +93,7 @@ export default class OrderItemOverview extends Component {
       { !this.state.uploadingPhoto &&
         <div>
 
-          <div className="card border-secondary mb-3 Order-Overview-Container">
-            <div className="card-header">订单信息</div>
-            <div className="card-body">
-              <div className='order-row'>
-                <div className='order-row-item'>
-                  <div>
-                    <span>{this.props.order.title}</span>
-                  </div>
-                  <div>
-                    <span>{this.props.order.description}</span>
-                  </div>
-                </div>
-                <div className='order-row-accessory'>
-                  <span>{this.props.order.numPhotos}</span>
-                  <span>/</span>
-                  <span style={{color: `rosybrown`}}>{this.state.allPhotos.length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <OrderOverView order={this.props.order} photoCount={this.state.allPhotos.length} />
           
         
           <div className='row'>
@@ -122,9 +104,15 @@ export default class OrderItemOverview extends Component {
             <p>
               {/* <button className='btn btn-primary' onClick={this.toggleSelectAll}>选定所有</button>
               <br/> */}
-              <button className='btn btn-primary' onClick={this.toggleAddPhoto}>添加照片</button>
-              <br/>
-              <button className='btn btn-primary' onClick={this.deletePhotos}>删除照片</button>
+              <button className='btn btn-primary btn-sm' onClick={this.toggleAddPhoto}>
+                添加&nbsp;
+                <i className="fas fa-plus-circle" aria-hidden="true"></i>
+              </button>
+              &nbsp;
+              <button className='btn btn-secondary btn-sm' onClick={this.deletePhotos}>
+              删除&nbsp;
+              <i className="fas fa-minus-circle"></i>
+              </button>
             </p>
           </div>
         </div>

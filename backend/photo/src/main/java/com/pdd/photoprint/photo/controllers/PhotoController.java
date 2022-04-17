@@ -10,6 +10,7 @@ import com.pdd.photoprint.photo.VO.RestResponse;
 import com.pdd.photoprint.photo.mapper.OrderMapper;
 import com.pdd.photoprint.photo.mapper.OrderPictureMapper;
 import com.pdd.photoprint.photo.mapper.PictureMapper;
+import com.pdd.photoprint.photo.mapper.PostAddrMapper;
 import com.pdd.photoprint.photo.model.OrderPicture;
 import com.pdd.photoprint.photo.services.PictureService;
 import org.apache.ibatis.jdbc.Null;
@@ -37,6 +38,9 @@ public class PhotoController {
     private PictureService pictureService;
 
     @Autowired
+    PostAddrMapper postAddrMapper;
+
+    @Autowired
     public void setPictureService(PictureService pictureService) {
         this.pictureService = pictureService;
     }
@@ -47,7 +51,7 @@ public class PhotoController {
         RestResponse response = new RestResponse();
 
 
-        OrderHelper orderHelper =  new OrderHelper(orderMapper);
+        OrderHelper orderHelper =  new OrderHelper(orderMapper, postAddrMapper);
         response = orderHelper.basicOrderInfoVerify(orderNumber);
         if(response.getStatus().equals(RestRepStatus.ERROR.name())) {
             return response;
@@ -61,11 +65,30 @@ public class PhotoController {
         return response;
     }
 
+    @PutMapping("/{orderNumber}/photos/{photoId}/editStatus/{status}")
+    public RestResponse editOrderPhotoStatus(@PathVariable String orderNumber, @PathVariable Integer photoId, @PathVariable Integer status) {
+        RestResponse response = new RestResponse();
+
+        OrderHelper orderHelper = new OrderHelper(orderMapper, postAddrMapper);
+        response = orderHelper.basicOrderInfoVerify(orderNumber);
+        if(!response.checkResponse()) {
+            return response;
+        }
+
+        PddOrderSummary orderSummary = orderMapper.queryOrderByNumber(orderNumber);
+
+        orderPictureMapper.updateStatus(orderSummary.getId(), photoId, status);
+
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setMessage("成功");
+        return response;
+    }
+
     @PutMapping("/{orderNumber}/photos/{photoId}/editCopies/{numCopies}")
     public RestResponse editCopieNumber(@PathVariable String orderNumber, @PathVariable Integer photoId, @PathVariable Integer numCopies) {
         RestResponse response = new RestResponse();
 
-        OrderHelper orderHelper = new OrderHelper(orderMapper);
+        OrderHelper orderHelper = new OrderHelper(orderMapper, postAddrMapper);
         response = orderHelper.basicOrderInfoVerify(orderNumber);
         if(!response.checkResponse()) {
             return response;
@@ -91,7 +114,7 @@ public class PhotoController {
     public RestResponse deletePhoto(@PathVariable String orderNumber, @PathVariable Integer photoId) {
         RestResponse response = new RestResponse();
 
-        OrderHelper orderHelper =  new OrderHelper(orderMapper);
+        OrderHelper orderHelper =  new OrderHelper(orderMapper, postAddrMapper);
 
         response = orderHelper.basicOrderInfoVerify(orderNumber);
         if(response.getStatus().equals(RestRepStatus.ERROR.name())) {
@@ -105,7 +128,7 @@ public class PhotoController {
     public RestResponse deleteMultiplePhoto(@PathVariable("orderNumber") String orderNumber, @RequestBody String [] photoIds, ServletRequest request) {
 
         OrderHelper orderHelper;
-        orderHelper = new OrderHelper(orderMapper);
+        orderHelper = new OrderHelper(orderMapper, postAddrMapper);
         RestResponse response = orderHelper.basicOrderInfoVerify(orderNumber);
 
         if(Objects.equals(response.getStatus(), RestRepStatus.ERROR.name())) {
