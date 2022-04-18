@@ -1,12 +1,14 @@
 package com.pdd.photoprint.photo.controllers;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.github.pagehelper.PageInfo;
 import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
 import com.pdd.photoprint.photo.Configs.UserType;
 import com.pdd.photoprint.photo.DTO.AddOrderDTO;
+import com.pdd.photoprint.photo.DTO.ChangePwdDTO;
 import com.pdd.photoprint.photo.DTO.LoginDetails;
 import com.pdd.photoprint.photo.Utils.AccessTokenGenerator;
 import com.pdd.photoprint.photo.Utils.OrderHelper;
@@ -113,9 +115,91 @@ public class AdminController {
         return response;
     }
 
+    @PostMapping("/logout")
+    public RestResponse logout(@RequestBody LoginDetails loginDetails, HttpSession session) throws NoSuchAlgorithmException {
+
+        logger.info("user login");
+        RestResponse response = checkLoginDetails(loginDetails);
+        if(!response.checkResponse()) {
+            return response;
+        }
+
+        QueryWrapper<Users> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(Users::getLoginName, loginDetails.getUserName());
+        wrapper.lambda().eq(Users::getAllowLogin, 1);
+        wrapper.lambda().eq(Users::getLoginType, UserLoginType.USER_NAME_PWD.getType());
+        wrapper.lambda().eq(Users::getPwd, loginDetails.getPwd());
+
+        Users user = userMapper.selectOne(wrapper);
+        if(user == null) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("退出失败，请检查用户名/密码");
+            return response;
+        }
+
+        session.removeAttribute("user_login");
+        session.removeAttribute("access_token");
+        session.removeAttribute("user_type");
+
+        response.setMessage("成功!");
+        return response;
+    }
+
+    @PostMapping("/changePwd")
+    public RestResponse changePwd(@RequestBody ChangePwdDTO changePwdDTO, HttpSession session) throws NoSuchAlgorithmException {
+
+        RestResponse response = checkChangePwdDetails(changePwdDTO);
+        if(!response.checkResponse()) {
+            return response;
+        }
+
+        QueryWrapper<Users> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(Users::getLoginName, changePwdDTO.getUserName());
+        wrapper.lambda().eq(Users::getAllowLogin, 1);
+        wrapper.lambda().eq(Users::getLoginType, UserLoginType.USER_NAME_PWD.getType());
+        wrapper.lambda().eq(Users::getPwd, changePwdDTO.getCurrPwd());
+
+        Users user = userMapper.selectOne(wrapper);
+        if(user == null) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("操作失败，请检查密码");
+            return response;
+        }
+
+        user.setPwd(changePwdDTO.getNewPwd());
+        userMapper.updateById(user);
+
+        String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, changePwdDTO.getUserName(), userAccessTokenMapper);
+
+        session.setAttribute("user_login", changePwdDTO.getUserName());
+        session.setAttribute("access_token", accessToken);
+        session.setAttribute("user_type", user.getUserType());
+
+        ResponseUserDetails  userDetails = new ResponseUserDetails();
+        userDetails.setLoginName(user.getLoginName());
+        userDetails.setUserType(user.getUserType());
+        userDetails.setLoginType(user.getLoginType());
+
+        response.setMessage("成功!");
+        response.setData(userDetails);
+        response.setAccessToken(accessToken);
+        return response;
+    }
+
     private RestResponse checkLoginDetails(LoginDetails loginDetails) {
         RestResponse response = new RestResponse();
         if(StringUtils.isEmpty(loginDetails.getUserName()) || StringUtils.isEmpty(loginDetails.getPwd())) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("用户名或密码为空!");
+            return response;
+        }
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        return response;
+    }
+
+    private RestResponse checkChangePwdDetails(ChangePwdDTO changePwdDTO) {
+        RestResponse response = new RestResponse();
+        if(StringUtils.isEmpty(changePwdDTO.getUserName()) || StringUtils.isEmpty(changePwdDTO.getCurrPwd()) || StringUtils.isEmpty(changePwdDTO.getCurrPwd())) {
             response.setStatus(RestRepStatus.ERROR.name());
             response.setError("用户名或密码为空!");
             return response;
@@ -150,8 +234,8 @@ public class AdminController {
                                        @RequestParam(value = "orderBy", required = false) String orderBy,
                                        @RequestParam(value = "desc", required = false) boolean desc,
                                        @RequestParam(value = "searchText", required = false) String searchText,
-                                       @RequestParam(value = "startDate", required = false) Date startDate,
-                                       @RequestParam(value = "endDate", required = false) Date endDate) {
+                                       @RequestParam(value = "startDate", required = false) String startDate,
+                                       @RequestParam(value = "endDate", required = false) String endDate) {
 
         RestResponse response = new RestResponse();
         response.setStatus(RestRepStatus.SUCCESS.name());

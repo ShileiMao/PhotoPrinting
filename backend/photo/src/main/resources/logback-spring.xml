@@ -188,4 +188,8 @@
         <appender-ref ref="FILE_TRACE"/>
     </logger>
 
+    <logger name="com.pdd.photoprint.photo.mapper.OrderMapper">
+        <level value="trace"/>
+    </logger>
+
 </configuration>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import SelectedImage from './SelectedImage'
-import '../../style/Printing.scss'
+import '../../style/Printing.css'
 import { useParams } from 'react-router-dom'
 import { loadOrders, queryPhotos } from '../../utils/apiHelper'
 import myLogger from '../../utils/logger'

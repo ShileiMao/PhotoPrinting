@@ -134,7 +134,6 @@ export function post(url, data = {}, params = {}) {
  * @param {object} params
  */
 export function get(url, params = {}) {
-  console.log("inside the api get function, base configs: " + JSON.stringify(_axios.c))
   return _axios({
     method: 'get',
     url,

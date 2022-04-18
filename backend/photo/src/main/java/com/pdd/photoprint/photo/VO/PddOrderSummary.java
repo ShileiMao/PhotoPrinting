@@ -17,7 +17,6 @@ public class PddOrderSummary extends Orders {
     @TableField("address")
     private String postAddressStr;
 
-
     @TableField("addr_details")
     private String postAddrDetailStr;
 

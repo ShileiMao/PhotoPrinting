@@ -1,9 +1,10 @@
 import { post, get, put, _delete } from "./axios";
-import { getToken } from "./token";
+import { getToken, removeToken } from "./token";
 import TOKEN_KEYS from "./consts";
 import { param } from "express/lib/request";
 import axios from "axios";
 import { StringUtils } from "./StringUtils";
+import DateFormatter from "./DateFormatter";
 
 function getAuthenticationHeaders() {
     let access_token = getToken(TOKEN_KEYS.ACCESS_TOKEN);
@@ -85,6 +86,42 @@ export async function userLogin(userName, pwd) {
     return response
 }
 
+export async function changePwd(userName, pwd, newPwd) {
+    const url = `/admin/changePwd`;
+    const sha256 = require('js-sha256');
+    const encryptedPwd = sha256.sha256(pwd);
+    const encryptedNewPwd = sha256.sha256(newPwd);
+
+    const postData = {
+        userName: userName,
+        currPwd: encryptedPwd,
+        newPwd: encryptedNewPwd
+    };
+
+    const response = await post(url, postData)
+    return response
+}
+
+export async function logout(userName, pwd) {
+    const url = `/admin/logout`
+
+    let postData = {
+        userName: userName
+    };
+    if(!StringUtils.isEmpty(pwd)) {
+        const sha256 = require('js-sha256');
+        const encryptedPwd = sha256.sha256(pwd);
+
+        postData.pwd = encryptedPwd;
+
+        const response = await post(url, postData);
+    }
+
+    removeToken(TOKEN_KEYS.ACCESS_TOKEN);
+    removeToken(TOKEN_KEYS.USER_TYPE);
+    removeToken(TOKEN_KEYS.USER_LOGIN);
+}
+
 export async function loadOrders(pddOrderNumber, status) {
     const url = "/admin/orders/all"
     const params = {}
@@ -133,12 +170,14 @@ export async function loadOrdersPage(status, pageIndex, pageSize, orderBy, desc,
         params.searchText = searchText;
     }
 
+    const dateFormatter = new DateFormatter();
+
     if(startDate !== null) {
-        params.startDate = startDate;
+        params.startDate = dateFormatter.toString(startDate, "yyyy-MM-DD");
     }
 
-    if(endDate !== endDate) {
-        params.endDate = endDate;
+    if(endDate !== null) {
+        params.endDate = dateFormatter.toString(endDate, "yyyy-MM-DD");
     }
 
     const result = await apiGet(url, params)

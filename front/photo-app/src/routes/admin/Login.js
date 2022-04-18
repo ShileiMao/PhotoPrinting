@@ -32,7 +32,10 @@ export const Login = (props) => {
         token: response.accessToken
     }
     props.setUser(user);
-    navigate("/admin/orders")
+
+    navigate("/admin/orders", {replace: true})
+
+    window.location.reload();
   }
 
   console.log("showing login  page ....");

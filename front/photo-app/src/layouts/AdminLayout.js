@@ -1,19 +1,32 @@
 import React, { useState } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AdminNavPanel } from '../Components/AdminNavPanel';
 import ic_logo from '../imgs/logo.png';
 import ic_profile from '../imgs/profile-img.jpg';
+import { logout } from '../utils/apiHelper';
+import TOKEN_KEYS from '../utils/consts';
+import { removeToken } from '../utils/token';
 
 export const AdminLayout = ({navigation, user}) => {
   const [currentUri, setCurrentUri] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const showAccountSettings = () => {
+    navigate("/admin/accountSettings")
+  }
+  
+  const logout1 = async () => {
+    await logout();
+    navigate("/admin", {replace: true});
+  }
 
   return (
     <>
     <header id="header" className="header fixed-top d-flex align-items-center header-scrolled">
 
       <div className="d-flex align-items-center justify-content-between">
-        <Link to={"/admin"} className="logo d-flex align-items-center">
+        <Link to={"/admin/orders"} className="logo d-flex align-items-center">
           <img src={ic_logo} alt="" />
           <span className="d-none d-lg-block">管理后台</span>
         </Link>
@@ -41,30 +54,30 @@ export const AdminLayout = ({navigation, user}) => {
 
             <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
               <li className="dropdown-header">
-                <h6>Kevin Anderson</h6>
-                <span>Web Designer</span>
+                <h6>{user.name}</h6>
+                <span>管理员</span>
               </li>
               <li>
                 <hr className="dropdown-divider" />
               </li>
 
-              <li>
+              {/* <li>
                 <a className="dropdown-item d-flex align-items-center" href="users-profile.html">
                   <i className="bi bi-person"></i>
                   <span>My Profile</span>
                 </a>
-              </li>
-              <li>
+              </li> */}
+              {/* <li>
                 <hr className="dropdown-divider" />
-              </li>
+              </li> */}
 
               <li>
-                <a className="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <a className="dropdown-item d-flex align-items-center" onClick={showAccountSettings}>
                   <i className="bi bi-gear"></i>
-                  <span>Account Settings</span>
+                  <span>账户设置</span>
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <hr className="dropdown-divider" />
               </li>
 
@@ -73,15 +86,15 @@ export const AdminLayout = ({navigation, user}) => {
                   <i className="bi bi-question-circle"></i>
                   <span>Need Help?</span>
                 </a>
-              </li>
+              </li> */}
               <li>
                 <hr className="dropdown-divider" />
               </li>
 
               <li>
-                <a className="dropdown-item d-flex align-items-center" href="#">
+                <a className="dropdown-item d-flex align-items-center" href="#" onClick={logout1}>
                   <i className="bi bi-box-arrow-right"></i>
-                  <span>Sign Out</span>
+                  <span>退出登录</span>
                 </a>
               </li>
 

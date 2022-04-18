@@ -14,6 +14,7 @@ import { getLoggedInUser, ifLoggedIn } from "./utils/apiHelper";
 import { EmptyLayout } from "./layouts/EmptyLayout";
 import InputOrder from "./routes/order/InputOrder";
 import { PrintLayout } from "./routes/photosLayouts/PrintLayout";
+import AccountSettings from "./routes/admin/AccountSettings";
 
 
 export const AppRouter = () => {
@@ -49,6 +50,14 @@ export const AppRouter = () => {
           <Route path="add" element={ <ProtectedRoute checkLogin={ifLoggedIn}><AdminAddOrder /></ProtectedRoute> } />
           <Route path="edit/:orderNum" element={ <ProtectedRoute checkLogin={ifLoggedIn}><AdminAddOrder isEditing={true} /></ProtectedRoute> } />
         </Route>
+
+        <Route path="/admin/accountSettings" 
+          element={
+            <ProtectedRoute checkLogin={ifLoggedIn}>
+              <AccountSettings />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       
       <Route path="print/test/:orderNumber" element={<PrintLayout />}></Route>

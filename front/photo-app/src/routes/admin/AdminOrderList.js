@@ -3,10 +3,22 @@ import AdminPageHeader from '../../Components/AdminPageHeader'
 import { OrderRow } from '../../Components/OrderRow'
 import { loadOrders, loadOrdersPage } from '../../utils/apiHelper'
 import { withRouter } from '../../utils/react-router'
+import DatePicker from 'react-datepicker'
+import "react-datepicker/dist/react-datepicker.css";
+import { Col, Container, Row } from 'react-bootstrap'
+import DateUtils from '../../utils/DateUtils'
+import SortableTableHeader from '../../Components/SortableTableHeader'
 
 class AdminOrderList extends Component {
   constructor(props) {
       super(props)
+
+      let dateUtils = new DateUtils();
+      let endOfDay = dateUtils.getEndOfDay();
+
+      dateUtils.setMonth(-1, true);
+      let startOfMonth = dateUtils.getStartOfDay();
+
       this.state = {
           data: [],
           pageInfo: null,
@@ -17,14 +29,19 @@ class AdminOrderList extends Component {
           searchStatus: null,
           pageIndex: 1,
           pageSize: 10,
-          startDate: null,
-          endDate: null,
+          startDate: startOfMonth,
+          endDate: endOfDay,
       }
       this.loadTable = this.loadTable.bind(this);
       this.deleteSelected = this.deleteSelected.bind(this);
       this.selectAll = this.selectAll.bind(this);
       this.toggleOrderCheck = this.toggleOrderCheck.bind(this);
       this.inputSearchText = this.inputSearchText.bind(this);
+      this.onKeyDownSearchBar = this.onKeyDownSearchBar.bind(this);
+      this.onBeginDateChange = this.onBeginDateChange.bind(this);
+      this.onEndDateChange = this.onEndDateChange.bind(this);
+      this.onSearchButtonClicked = this.onSearchButtonClicked.bind(this);
+      this.onSortChanged = this.onSortChanged.bind(this);
       this.prePage = this.prePage.bind(this);
       this.nextPage = this.nextPage.bind(this);
   }
@@ -35,6 +52,9 @@ class AdminOrderList extends Component {
       searchStatus = this.state.searchStatus.dbValue;
     }
 
+    const startDate = this.state.startDate;
+    const endDate = this.state.endDate;
+
     const result = await loadOrdersPage(
         searchStatus,
         pageIndex, 
@@ -42,8 +62,8 @@ class AdminOrderList extends Component {
         this.state.orderBy, 
         this.state.desc, 
         this.state.searchBy, 
-        this.state.startDate, 
-        this.state.endDate);
+        startDate, 
+        endDate);
 
     console.log("error loading order: ");
     if(result.status.toLowerCase() === 'error') {
@@ -102,6 +122,41 @@ class AdminOrderList extends Component {
     });
   }
 
+  onKeyDownSearchBar(event) {
+    console.log(event.key)
+    if(event.key === 'Enter') {
+      this.loadTable(1);
+    }
+  }
+
+  onSearchButtonClicked() {
+    this.loadTable(1);
+  }
+
+  onSortChanged(name, asending) {
+    console.log("sorted: " + name + ", asendign: " + asending);
+    this.setState({
+      orderBy: name,
+      desc: !asending
+    }, () => {
+      this.loadTable(1);
+    });
+  }
+
+  onBeginDateChange(event) {
+    console.log("start date: " + event)
+    this.setState({
+      startDate: event
+    })
+  }
+
+  onEndDateChange(event) {
+    console.log("end date: " + event)
+    this.setState({
+      endDate: event
+    })
+  }
+
   componentDidMount() {
     this.loadTable(1)
   }
@@ -143,22 +198,48 @@ class AdminOrderList extends Component {
             <h5 className="card-title">订单列表</h5>
             
             <div className='dataTable-wrapper dataTable-loading no-footer sortable searchable fixed-columns'>
-              <div className="dataTable-top">              
-                <div>
-                  <button className='btn btn-secondary btn-sm' onClick={this.selectAll}>全选</button>
-                  <button className='btn btn-primary btn-sm' onClick={this.deleteSelected}>删除</button>
-                </div>
-                <div className='dataTable-search'>
-                  <input className="dataTable-input" placeholder="Search..." type="text" onChange={this.inputSearchText} />
-                </div>
+              <div className="container dataTable-top">              
+              <Container fluid>
+                <Row gy={5}>
+                  <Col md={4}>
+                        <label>开始日期</label>
+                        <DatePicker selected={this.state.startDate} onChange={this.onBeginDateChange}/>
+                  </Col>
+                  <Col md={4}>
+                        <label>结束日期</label>
+                        <DatePicker selected={this.state.endDate} onChange={this.onEndDateChange} />
+                  </Col>
+                </Row>
+                <br />
+                <Row gy={5}>
+                  <Col>
+                    <button className='btn btn-secondary btn-sm' onClick={this.selectAll}>全选</button>
+                    <button className='btn btn-primary btn-sm' onClick={this.deleteSelected}>删除</button>
+                  </Col>
+
+                  <Col md={4}>
+                    <div className='dataTable-search'>
+                      <input className="dataTable-input" placeholder="输入关键词..." type="text" onChange={this.inputSearchText} onKeyDown={this.onKeyDownSearchBar} />
+                    </div>
+                  </Col>
+
+                  <Col>
+                    <button className='btn btn-primary btn-sm' onClick={this.onSearchButtonClicked} title="查询">查 询</button>
+                  </Col>
+                </Row>
+                
+              </Container>
+                
               </div>
+
+              <br />
               <table className="table table-sm">
                   <thead>
                   <tr>
                       <th>选择</th>
                       <th>ID</th>
-                      <th>名称</th>
-                      <th>描述</th>
+                      <SortableTableHeader title={"名称"} sortKeyword="title" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"描述"} sortKeyword="description" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <th>打印张数</th>
                       <th>用户名</th>
                       <th>电话</th>
@@ -194,82 +275,6 @@ class AdminOrderList extends Component {
           </div>
         </div>
       </div>
-
-      // <main id="main" className="main">
-
-      //   <div className="pagetitle">
-      //     <h1>General Tables</h1>
-      //     <nav>
-      //       <ol className="breadcrumb">
-      //         <li className="breadcrumb-item"><a href="index.html">Home</a></li>
-      //         <li className="breadcrumb-item">Tables</li>
-      //         <li className="breadcrumb-item active">General</li>
-      //       </ol>
-      //     </nav>
-      //   </div>
-
-      //   <section className="section">
-      //     <div className="row">
-            
-      //         <div>
-      //           <div className="card-body">
-      //             <h5 className="card-title">Default Table</h5>
-
-
-      //             <table className="table">
-      //               <thead>
-      //                 <tr>
-      //                   <th scope="col">#</th>
-      //                   <th scope="col">Name</th>
-      //                   <th scope="col">Position</th>
-      //                   <th scope="col">Age</th>
-      //                   <th scope="col">Start Date</th>
-      //                 </tr>
-      //               </thead>
-      //               <tbody>
-      //                 <tr>
-      //                   <th scope="row">1</th>
-      //                   <td>Brandon Jacob</td>
-      //                   <td>Designer</td>
-      //                   <td>28</td>
-      //                   <td>2016-05-25</td>
-      //                 </tr>
-      //                 <tr>
-      //                   <th scope="row">2</th>
-      //                   <td>Bridie Kessler</td>
-      //                   <td>Developer</td>
-      //                   <td>35</td>
-      //                   <td>2014-12-05</td>
-      //                 </tr>
-      //                 <tr>
-      //                   <th scope="row">3</th>
-      //                   <td>Ashleigh Langosh</td>
-      //                   <td>Finance</td>
-      //                   <td>45</td>
-      //                   <td>2011-08-12</td>
-      //                 </tr>
-      //                 <tr>
-      //                   <th scope="row">4</th>
-      //                   <td>Angus Grady</td>
-      //                   <td>HR</td>
-      //                   <td>34</td>
-      //                   <td>2012-06-11</td>
-      //                 </tr>
-      //                 <tr>
-      //                   <th scope="row">5</th>
-      //                   <td>Raheem Lehner</td>
-      //                   <td>Dynamic Division Officer</td>
-      //                   <td>47</td>
-      //                   <td>2011-04-19</td>
-      //                 </tr>
-      //               </tbody>
-      //             </table>
-                  
-      //           </div>
-      //         </div>
-      //     </div>
-      //   </section>
-      // </main>
     )
   }
 }

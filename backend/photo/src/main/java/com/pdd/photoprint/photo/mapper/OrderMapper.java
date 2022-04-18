@@ -23,6 +23,6 @@ public interface OrderMapper extends BaseMapper<Orders> {
                                          String orderBy,
                                          boolean desc,
                                          String searchText,
-                                         Date startDate,
-                                         Date endDate);
+                                         String startDate,
+                                         String endDate);
 }

@@ -103,7 +103,6 @@ export const parsOrderStatusDbValue = (dbValue) => {
   }
 }
 
-
 export const Packaging = [
   {
     value: `DEFAULT`,
@@ -195,6 +194,21 @@ export const parsePhotoSizeDbValue = (dbValue) => {
 
   }
 }
+
+export const toRedableOptionText = (options, dbValue) => {
+  const option = options.filter(item => {
+    if(item.dbValue === dbValue) {
+      return true;
+    }
+    return false;
+  });
+
+  if(option.length > 0) {
+    return option[0].text;
+  }
+  return "默认";
+}
+
 
 export const PhotoPrintStatus = [
   {

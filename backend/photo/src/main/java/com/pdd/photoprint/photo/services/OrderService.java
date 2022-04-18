@@ -31,8 +31,8 @@ public class OrderService extends ServiceImpl<OrderMapper, Orders> {
                                                     String orderBy,
                                                     boolean desc,
                                                     String searchText,
-                                                    Date startDate,
-                                                    Date endDate) {
+                                                    String startDate,
+                                                    String endDate) {
 
         PageHelper.startPage(page, pageSize);
         List<PddOrderSummary> orderSummaryList = orderMapper.queryOrderPage(orderStatus, orderBy, desc, searchText, startDate, endDate);
