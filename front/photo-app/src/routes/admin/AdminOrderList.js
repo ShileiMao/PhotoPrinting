@@ -1,13 +1,15 @@
 import React, { Component } from 'react'
 import AdminPageHeader from '../../Components/AdminPageHeader'
 import { OrderRow } from '../../Components/OrderRow'
-import { loadOrders, loadOrdersPage } from '../../utils/apiHelper'
+import { deleteOrders, loadOrders, loadOrdersPage } from '../../utils/apiHelper'
 import { withRouter } from '../../utils/react-router'
 import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css";
-import { Col, Container, Row } from 'react-bootstrap'
+import { Col, Container, Row, ToastHeader } from 'react-bootstrap'
 import DateUtils from '../../utils/DateUtils'
 import SortableTableHeader from '../../Components/SortableTableHeader'
+import { OrderStatus } from '../../config/Consts'
+import ToastHelper from '../../utils/toastHelper'
 
 class AdminOrderList extends Component {
   constructor(props) {
@@ -26,7 +28,7 @@ class AdminOrderList extends Component {
           orderBy: null,
           desc: false,
           searchBy: null,
-          searchStatus: null,
+          searchStatus: 0,
           pageIndex: 1,
           pageSize: 10,
           startDate: startOfMonth,
@@ -37,6 +39,7 @@ class AdminOrderList extends Component {
       this.selectAll = this.selectAll.bind(this);
       this.toggleOrderCheck = this.toggleOrderCheck.bind(this);
       this.inputSearchText = this.inputSearchText.bind(this);
+      this.onOrderStatusChange = this.onOrderStatusChange.bind(this);
       this.onKeyDownSearchBar = this.onKeyDownSearchBar.bind(this);
       this.onBeginDateChange = this.onBeginDateChange.bind(this);
       this.onEndDateChange = this.onEndDateChange.bind(this);
@@ -47,10 +50,7 @@ class AdminOrderList extends Component {
   }
 
   async loadTable(pageIndex) {
-    let searchStatus = 0;
-    if(this.state.searchStatus !== null) {
-      searchStatus = this.state.searchStatus.dbValue;
-    }
+    const searchStatus = this.state.searchStatus;
 
     const startDate = this.state.startDate;
     const endDate = this.state.endDate;
@@ -65,7 +65,7 @@ class AdminOrderList extends Component {
         startDate, 
         endDate);
 
-    console.log("error loading order: ");
+    console.log("load table with search status: " + searchStatus);
     if(result.status.toLowerCase() === 'error') {
         console.log("error loading order: " + result.error);
         return;
@@ -88,6 +88,16 @@ class AdminOrderList extends Component {
     })
 
     console.log("delete selected clicked, checkedItems: " + JSON.stringify(selectedOrders));
+    const result = await deleteOrders(selectedOrders);
+    console.log("delete result:")
+    if(result.status.toLowerCase() === 'success') {
+      ToastHelper.showDefault("成功!");
+      this.loadTable(1);
+      return;
+    }
+
+    ToastHelper.showDefault("操作失败!");
+    this.loadTable(1);
   }
 
   selectAll() {
@@ -116,9 +126,16 @@ class AdminOrderList extends Component {
   }
 
   inputSearchText(event) {
-    console.log("input search text: " + event.target.value);
     this.setState({
       searchBy: event.target.value
+    });
+  }
+
+  onOrderStatusChange(event) {
+    this.setState({
+      searchStatus: event.target.value
+    }, () => {
+      this.loadTable(1);
     });
   }
 
@@ -208,6 +225,18 @@ class AdminOrderList extends Component {
                   <Col md={4}>
                         <label>结束日期</label>
                         <DatePicker selected={this.state.endDate} onChange={this.onEndDateChange} />
+                  </Col>
+                  <Col md={4}>
+                    <label>订单状态</label>
+                    <select onChange={this.onOrderStatusChange} className="form-select" defaultValue={"0"}>
+                    {
+                      OrderStatus.map(item => {
+                        return (
+                          <option key={item.value} value={item.dbValue}>{item.text}</option>
+                        )
+                      })
+                    }
+                    </select>
                   </Col>
                 </Row>
                 <br />

@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -240,7 +242,7 @@ public class AdminController {
         RestResponse response = new RestResponse();
         response.setStatus(RestRepStatus.SUCCESS.name());
         response.setMessage("成功");
-
+        System.out.println("order status: " + orderStatus);
         PageInfo<PddOrderSummary> orderSummaryList = orderService.queryOrderPage(page, pageSize, orderStatus, orderBy, desc, searchText, startDate, endDate);
         response.setData(orderSummaryList);
 
@@ -255,6 +257,22 @@ public class AdminController {
             return response;
         }
         response = orderHelper.addOrder(addOrderDTO);
+        return response;
+    }
+
+    @DeleteMapping("/order/delete")
+    public RestResponse deleteOrders(@RequestBody List<PddOrderSummary> orderList) {
+        List<Integer> orderIds = new ArrayList<>();
+        for(PddOrderSummary orderSummary : orderList) {
+            orderIds.add(orderSummary.getId());
+        }
+
+
+        orderService.getOrderMapper().deleteOrders(orderIds);
+
+        RestResponse response = new RestResponse();
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setMessage("成功");
         return response;
     }
 

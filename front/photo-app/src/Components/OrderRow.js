@@ -22,7 +22,7 @@ export const OrderRow = ({props, order, toggleCheck}) => {
 
   return (
     <tr>
-        <td><input type="checkbox" className='form-check-input' onClick={handleClick} checked={order.checked || false} onChange={handleClick}/></td>
+        <td><input type="checkbox" className='form-check-input' checked={order.checked || false} onChange={handleClick} /></td>
         <td>{order.id}</td>
         <td>{order.title}</td>
         <td>{order.description}</td>

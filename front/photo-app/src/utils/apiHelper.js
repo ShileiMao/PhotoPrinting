@@ -213,6 +213,12 @@ export async function adminEditOrder(data) {
     return result;
 }
 
+export async function deleteOrders(data) {
+    const url = `/admin/order/delete`
+    const result = await apiDelete(url, data);
+    return result;
+}
+
 export async function deleteSelectedPhotos(pddOrderNumber, photoIds) {
     const url = `/orders/${pddOrderNumber}/photos/deleteMultiple`
     const result = await apiDelete(url, photoIds)

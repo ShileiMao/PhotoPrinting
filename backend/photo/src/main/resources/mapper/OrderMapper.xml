@@ -91,4 +91,12 @@
 <!--        </if>-->
 
     </select>
+
+    <delete id="deleteOrders">
+        delete from orders where id in
+        <foreach item="item" index="index" collection="orderIds"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
 </mapper>

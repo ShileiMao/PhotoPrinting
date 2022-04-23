@@ -1,5 +1,10 @@
 export const OrderStatus = [
   {
+    value: `UNPROVED`,
+    dbValue: -1,
+    text: "未审核"
+  },
+  {
     value: `NEW`,
     dbValue: 0,
     text: "待处理"
@@ -64,6 +69,9 @@ export const OrderStatus = [
  */
 export const parsOrderStatusDbValue = (dbValue) => {
   switch(dbValue) {
+    case -1:
+      return `UNPROVED`;
+      
     case 0:
       return `NEW`;
 

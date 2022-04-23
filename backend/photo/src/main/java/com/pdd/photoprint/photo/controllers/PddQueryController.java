@@ -67,7 +67,7 @@ public class PddQueryController {
         }
 
         // TODO: query from pdd
-        response.setError("订单不存在!");
+        response.setError("订单信息不存在，请检查订单号，或尝试录入新订单？");
         return response;
     }
 

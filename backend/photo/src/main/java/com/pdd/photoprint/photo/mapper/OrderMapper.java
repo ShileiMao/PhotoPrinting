@@ -25,4 +25,6 @@ public interface OrderMapper extends BaseMapper<Orders> {
                                          String searchText,
                                          String startDate,
                                          String endDate);
+
+    Integer deleteOrders(List<Integer> orderIds);
 }

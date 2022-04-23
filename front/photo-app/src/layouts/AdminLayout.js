@@ -39,7 +39,8 @@ export const AdminLayout = ({navigation, user}) => {
 
           <li className="nav-item d-block d-lg-none">
             <a className="nav-link nav-icon search-bar-toggle " href="#">
-              <i className="bi bi-search"></i>
+              {/* <i className="bi bi-search"></i> */}
+              <p className="navbar-brand" >叙青春数码冲印</p>
             </a>
           </li>
           {/* <!-- End Search Icon--> */}

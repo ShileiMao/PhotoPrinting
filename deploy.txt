@@ -3,10 +3,11 @@ http://39.105.223.206
 2. ftp root: /var/ftp/test
 3. tomcat site: /data/wwwroot/default
 4. log path: /usr/local/tomcat/bin
-5. command to start react front end: pm2 serve build 8080 --spa 
+5. command to start react front end: pm2 serve build 80 --spa 
 6. check running pm2 apps: pm2 list
 
-
+/usr/local/tomcat/bin/catalina.sh stop
+/usr/local/tomcat/bin/catalina.sh start
 
 
 /usr/local/Cellar/maven/apache-maven-3.8.2/bin/mvn

@@ -113,7 +113,7 @@ export default function AdminOrderFrom({isEditing, preFillData, editOrderApi, ad
         </div>
 
         <div className="col-3 mb-3">
-          <label className="form-label">包装：</label>
+          <label className="form-label">工艺：</label>
           <select className="form-control" {...register("packaging", {required: true})}>
             {
               Packaging.map(item => {

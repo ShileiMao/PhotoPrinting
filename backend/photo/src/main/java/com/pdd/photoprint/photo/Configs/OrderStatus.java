@@ -3,6 +3,7 @@ package com.pdd.photoprint.photo.Configs;
 import org.springframework.core.annotation.Order;
 
 public enum OrderStatus {
+    UNPROVED(-1, "未审核"),
     NEW(0, "待处理"),
     PRINTED(1, "已打印"),
     POSTED(2, "已邮递"),
