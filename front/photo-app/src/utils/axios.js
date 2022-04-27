@@ -1,5 +1,6 @@
 // ajax 封装插件, 使用 axios
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
 import webConf from '../config/webConf'
 import ToastHelper from './toastHelper';
 
@@ -8,18 +9,32 @@ const config = {
   baseURL: webConf.BASE_URL,
   timeout: 5 * 1000, //   请求超时时间设置
   crossDomain: true,
-  withCredentials: false, // Check cross-site Access-Control
+  withCredentials: true, // Check cross-site Access-Control
   // 定义可获得的http响应状态码
   // return true、设置为null或者undefined，promise将resolved,否则将rejected
   validateStatus(status) {
     return status >= 200 && status < 510
   },
+  handleError: (res) => {
+    if(res.status === 401) {
+      ToastHelper.showError("请登录！", () => {
+        window.location = "/admin"
+      });
+      setTimeout(() => {
+        window.location = "/admin"
+      }, 500);
+    }
+    //  else {
+    //   window.location = "/admin"
+    // }
+  }
 }
 
 // const retryTime = 2 // 请求失败重试次数
 // const retryDelay = 1500 // 请求失败重试间隔
 
 // 创建请求实例
+axios.defaults.withCredentials = true;
 const _axios = axios.create(config)
 
 _axios.interceptors.request.use(
@@ -100,7 +115,7 @@ _axios.interceptors.response.use(
       // const { url } = res.config
 
       if (res.config.handleError) {
-        return reject(res)
+        return res.config.handleError(res)
       }
       reject()
     })
@@ -162,7 +177,7 @@ export function put(url, data = {}, params = {}) {
  */
 export function _delete(url, headers = {}, data = {}) {
   return _axios.delete(url,{
-    headers: headers,
+    params: headers,
     data: data
   })
 }

@@ -15,7 +15,6 @@ public class AppConfiguration implements WebMvcConfigurer {
     @Autowired
     RequestInterceptor requestInterceptor;
 
-
     private RequestLogInterceptor requestLogInterceptor;
 
     @Autowired
@@ -26,9 +25,11 @@ public class AppConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requestInterceptor)
-                .excludePathPatterns("/pdd/queryOrder")
+                .addPathPatterns("/**")
                 .excludePathPatterns("/admin/login")
-                .excludePathPatterns("/pdd/order/add");
+                .excludePathPatterns("/pdd/queryOrder")
+                .excludePathPatterns("/pdd/order/add")
+                .excludePathPatterns("/pdd/order/edit");
 
         registry.addInterceptor(this.requestLogInterceptor);
     }
@@ -37,6 +38,7 @@ public class AppConfiguration implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("*")
+//                .allowedOrigins("http://39.105.223.206")
                 .allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)
                 .maxAge(3600)

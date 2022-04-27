@@ -15,9 +15,11 @@ import { EmptyLayout } from "./layouts/EmptyLayout";
 import InputOrder from "./routes/order/InputOrder";
 import { PrintLayout } from "./routes/photosLayouts/PrintLayout";
 import AccountSettings from "./routes/admin/AccountSettings";
+import { CreateAccount } from "./routes/admin/CreateAccount";
+import UserList from "./routes/admin/UserList";
 
 
-export const AppRouter = () => {
+export const AppRouter = ({showModal}) => {
   const onChange = () => {
     console.log("route changed")
   }
@@ -45,7 +47,7 @@ export const AppRouter = () => {
         {/* <Route path="" element={<Login setUser={setUser} />}>
         </Route> */}
         <Route path="orders">
-          <Route path="" element={<ProtectedRoute checkLogin={ifLoggedIn} redirectPath="/admin"> <AdminOrderList /></ProtectedRoute>} />
+          <Route path="" element={<ProtectedRoute checkLogin={ifLoggedIn} redirectPath="/admin"> <AdminOrderList showModal={showModal} /></ProtectedRoute>} />
           <Route path=":orderNum" element={ <ProtectedRoute checkLogin={ifLoggedIn} ><AdminOrderDtails /></ProtectedRoute>  } />
           <Route path="add" element={ <ProtectedRoute checkLogin={ifLoggedIn}><AdminAddOrder /></ProtectedRoute> } />
           <Route path="edit/:orderNum" element={ <ProtectedRoute checkLogin={ifLoggedIn}><AdminAddOrder isEditing={true} /></ProtectedRoute> } />
@@ -58,6 +60,9 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route path="user/add" element={ <ProtectedRoute checkLogin={ifLoggedIn}> <CreateAccount /> </ProtectedRoute> } />
+        <Route path="users" element={ <ProtectedRoute checkLogin={ifLoggedIn}> <UserList /> </ProtectedRoute> } />
       </Route>
       
       <Route path="print/test/:orderNumber" element={<PrintLayout />}></Route>

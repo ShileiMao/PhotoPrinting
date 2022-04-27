@@ -28,7 +28,7 @@ export const OrderRow = ({props, order, toggleCheck}) => {
         <td>{order.description}</td>
         <td>{order.numPhotos}</td>
         <td>{"拼多多用户"}</td>
-        <td>-</td>
+        <td>{order.phoneNumber}</td>
         <td>{order.postAddressStr}</td>
         <td>{order.dateCreate}</td>
         <td>{toRedableOptionText(OrderStatus, order.status)}</td>

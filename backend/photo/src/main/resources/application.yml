@@ -10,9 +10,11 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 30MB
-  redis:
-    host: localhost
-    port: 6397
+
+#  redis:
+#    host: localhost
+#    port: 6397
+
   session:
     store-type: jdbc
     jdbc:

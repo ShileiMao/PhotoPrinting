@@ -25,6 +25,8 @@ public class AddOrderDTO {
 
     private String title;
 
+    private String userName;
+
     private String description;
 
     private PhotoSize photoSize;

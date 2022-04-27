@@ -22,6 +22,13 @@ export const AdminNavPanel = () => {
           </Link>
         </li>
 
+        <li className="nav-item">
+          <Link to={"/admin/users"} className="nav-link ">
+            <i className="bi bi-grid"></i>
+            <span>用户列表</span>
+          </Link>
+        </li>
+
         {/* <li className="nav-item">
           <a className="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
             <i className="bi bi-layout-text-window-reverse"></i><span>Tables</span><i className="bi bi-chevron-down ms-auto"></i>

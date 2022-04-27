@@ -26,34 +26,21 @@ public class AccessTokenGenerator {
         int random = (int)(Math.random() * 100000);
 
         if(accessToken != null) {
-            Date expires = accessToken.getExpires();
-            if(DateHelper.differIn(new Date(), expires, Calendar.SECOND) >= 5) {
-                return accessToken.getAccessToken();
-            }
-
-            String token = AccessTokenGenerator.generateAccessToken(loginName, random + "");
-            accessToken.setAccessToken(token);
-
-            Date date = new Date();
-            accessToken.setExpires(DateHelper.shiftDate(date, Calendar.MINUTE, 10));
-
-            userAccessTokenMapper.updateById(accessToken);
-            return accessToken.getAccessToken();
+            userAccessTokenMapper.deleteById(accessToken.getUserId());
         }
 
-        accessToken = new UserAccessToken();
-
         String token = AccessTokenGenerator.generateAccessToken(loginName, random + "");
-        accessToken.setAccessToken(token);
+
+        UserAccessToken newToken = new UserAccessToken();
+        newToken.setAccessToken(token);
 
         Date date = new Date();
-        Date expireDate = DateHelper.shiftDate(date, Calendar.MINUTE, 10);
-        accessToken.setExpires(expireDate);
+        newToken.setExpires(DateHelper.shiftDate(date, Calendar.MINUTE, 10));
 
-        accessToken.setUserId(user.getId());
+        newToken.setUserId(user.getId());
 
-        userAccessTokenMapper.insert(accessToken);
+        userAccessTokenMapper.insert(newToken);
 
-        return accessToken.getAccessToken();
+        return newToken.getAccessToken();
     }
 }

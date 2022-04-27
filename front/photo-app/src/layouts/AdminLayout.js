@@ -15,6 +15,10 @@ export const AdminLayout = ({navigation, user}) => {
   const showAccountSettings = () => {
     navigate("/admin/accountSettings")
   }
+
+  const showAddUser = () => {
+    navigate("/admin/user/add")
+  }
   
   const logout1 = async () => {
     await logout();
@@ -76,6 +80,13 @@ export const AdminLayout = ({navigation, user}) => {
                 <a className="dropdown-item d-flex align-items-center" onClick={showAccountSettings}>
                   <i className="bi bi-gear"></i>
                   <span>账户设置</span>
+                </a>
+              </li>
+
+              <li>
+                <a className="dropdown-item d-flex align-items-center" onClick={showAddUser}>
+                  <i className="bi bi-gear"></i>
+                  <span>添加用户</span>
                 </a>
               </li>
               {/* <li>

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { userLogin } from '../../utils/apiHelper'
 import TOKEN_KEYS from '../../utils/consts'
+import ToastHelper from '../../utils/toastHelper'
 import { storeToken } from '../../utils/token'
 
 export const Login = (props) => {
@@ -19,6 +20,7 @@ export const Login = (props) => {
     const response = await userLogin(userName, password);
     if(response.status.toLowerCase() === 'error') {
         console.log("failed login")
+        ToastHelper.showError("登陆失败，请检查用户名密码");
         return;
     }
 

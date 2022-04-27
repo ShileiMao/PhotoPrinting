@@ -14,18 +14,21 @@ function getDefaultConfig() {
 }
 
 const ToastHelper = {
-  showDefault: function(message) {
+  showDefault: function(message, onClose) {
     let config = getDefaultConfig();
+    config.onClose = onClose
     toast.info(message, config);
   },
 
-  showWarning: function(message) {
+  showWarning: function(message, onClose) {
     let config = getDefaultConfig();
+    config.onClose = onClose
     toast.warning(message, config);
   },
 
-  showError: function(message) {
+  showError: function(message, onClose) {
     let config = getDefaultConfig();
+    config.onClose = onClose
     toast.error(message, config);
   }
 };

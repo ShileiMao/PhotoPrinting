@@ -1,9 +1,8 @@
 package com.pdd.photoprint.photo.controllers;
 
+import ch.qos.logback.classic.net.SyslogAppender;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.github.pagehelper.PageInfo;
-import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
 import com.pdd.photoprint.photo.Configs.UserType;
@@ -15,15 +14,13 @@ import com.pdd.photoprint.photo.Utils.OrderHelper;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
 import com.pdd.photoprint.photo.VO.ResponseUserDetails;
 import com.pdd.photoprint.photo.VO.RestResponse;
-import com.pdd.photoprint.photo.mapper.OrderMapper;
 import com.pdd.photoprint.photo.mapper.PostAddrMapper;
 import com.pdd.photoprint.photo.mapper.UserAccessTokenMapper;
 import com.pdd.photoprint.photo.mapper.UserMapper;
-import com.pdd.photoprint.photo.model.Orders;
-import com.pdd.photoprint.photo.model.PostAddr;
+import com.pdd.photoprint.photo.model.UserDO;
 import com.pdd.photoprint.photo.model.Users;
 import com.pdd.photoprint.photo.services.OrderService;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import org.apache.catalina.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -31,16 +28,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
+
+    @Autowired
+    private HttpSession httpSession;
+
     private UserMapper userMapper;
 
     private UserAccessTokenMapper userAccessTokenMapper;
@@ -79,7 +80,7 @@ public class AdminController {
     }
 
     @PostMapping("/login")
-    public RestResponse login(@RequestBody LoginDetails loginDetails, HttpSession session) throws NoSuchAlgorithmException {
+    public RestResponse login(@RequestBody LoginDetails loginDetails) throws NoSuchAlgorithmException {
 
         logger.info("user login");
         RestResponse response = checkLoginDetails(loginDetails);
@@ -100,25 +101,11 @@ public class AdminController {
             return response;
         }
 
-        String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, loginDetails.getUserName(), userAccessTokenMapper);
-
-        session.setAttribute("user_login", loginDetails.getUserName());
-        session.setAttribute("access_token", accessToken);
-        session.setAttribute("user_type", user.getUserType());
-
-        ResponseUserDetails  userDetails = new ResponseUserDetails();
-        userDetails.setLoginName(user.getLoginName());
-        userDetails.setUserType(user.getUserType());
-        userDetails.setLoginType(user.getLoginType());
-
-        response.setMessage("成功!");
-        response.setData(userDetails);
-        response.setAccessToken(accessToken);
-        return response;
+        return refreshUserToken(this.httpSession, response, user, loginDetails.getUserName());
     }
 
     @PostMapping("/logout")
-    public RestResponse logout(@RequestBody LoginDetails loginDetails, HttpSession session) throws NoSuchAlgorithmException {
+    public RestResponse logout(@RequestBody LoginDetails loginDetails) throws NoSuchAlgorithmException {
 
         logger.info("user login");
         RestResponse response = checkLoginDetails(loginDetails);
@@ -139,16 +126,17 @@ public class AdminController {
             return response;
         }
 
-        session.removeAttribute("user_login");
-        session.removeAttribute("access_token");
-        session.removeAttribute("user_type");
+        httpSession.removeAttribute("user_login");
+        httpSession.removeAttribute("access_token");
+        httpSession.removeAttribute("user_type");
+        httpSession.invalidate();
 
         response.setMessage("成功!");
         return response;
     }
 
     @PostMapping("/changePwd")
-    public RestResponse changePwd(@RequestBody ChangePwdDTO changePwdDTO, HttpSession session) throws NoSuchAlgorithmException {
+    public RestResponse changePwd(@RequestBody ChangePwdDTO changePwdDTO, HttpServletRequest request) throws NoSuchAlgorithmException {
 
         RestResponse response = checkChangePwdDetails(changePwdDTO);
         if(!response.checkResponse()) {
@@ -171,13 +159,100 @@ public class AdminController {
         user.setPwd(changePwdDTO.getNewPwd());
         userMapper.updateById(user);
 
-        String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, changePwdDTO.getUserName(), userAccessTokenMapper);
+        return refreshUserToken(request.getSession(), response, user, changePwdDTO.getUserName());
+    }
 
-        session.setAttribute("user_login", changePwdDTO.getUserName());
+    @PostMapping("/createUser")
+    public RestResponse createUser(@RequestBody UserDO userDO) {
+        RestResponse response = new RestResponse();
+
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Users::getLoginName, userDO.getLoginName());
+
+        Users existingUser = userMapper.selectOne(queryWrapper);
+        if(existingUser != null) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("用户已存在");
+            return response;
+        }
+
+        if(StringUtils.isEmpty(userDO.getPwd())) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("请输入密码");
+            return response;
+        }
+
+        Users user = new Users();
+        BeanUtils.copyProperties(userDO, user);
+        userMapper.insert(user);
+
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setData(user);
+        return response;
+    }
+
+    @GetMapping("/getUsers")
+    public RestResponse getUsers(@RequestParam(required = false) Integer userId, @RequestParam(required = false) String loginName) {
+        RestResponse response = new RestResponse();
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+
+        if(userId != null && loginName != null) {
+
+            queryWrapper.lambda().eq(Users::getLoginName, loginName);
+            queryWrapper.lambda().eq(Users::getId, userId);
+
+            Users user = userMapper.selectOne(queryWrapper);
+
+            if(user == null) {
+                response.setStatus(RestRepStatus.ERROR.name());
+                response.setError("用户不存在");
+                return response;
+            }
+
+            response.setStatus(RestRepStatus.SUCCESS.name());
+            response.setData(user);
+            return response;
+        }
+
+        List<Users> users = userMapper.selectList(queryWrapper);
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setData(users);
+        return response;
+    }
+
+    @DeleteMapping("/deleteUser")
+    public RestResponse deleteUsers(@RequestParam Integer userId, @RequestParam String loginName) {
+        RestResponse response = new RestResponse();
+
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Users::getLoginName, loginName);
+        queryWrapper.lambda().eq(Users::getId, userId);
+
+        Users user = userMapper.selectOne(queryWrapper);
+
+        if(user == null) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("用户不存在");
+            return response;
+        }
+
+        userMapper.deleteById(user.getId());
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setData("操作成功");
+        return response;
+    }
+
+    private RestResponse refreshUserToken(HttpSession session, RestResponse response, Users user, String userName) throws NoSuchAlgorithmException {
+        String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, userName, userAccessTokenMapper);
+
+        if(this.httpSession == session) {
+            System.out.print("same session");
+        }
+        session.setAttribute("user_login", userName);
         session.setAttribute("access_token", accessToken);
         session.setAttribute("user_type", user.getUserType());
 
-        ResponseUserDetails  userDetails = new ResponseUserDetails();
+        ResponseUserDetails userDetails = new ResponseUserDetails();
         userDetails.setLoginName(user.getLoginName());
         userDetails.setUserType(user.getUserType());
         userDetails.setLoginType(user.getLoginType());
@@ -217,11 +292,6 @@ public class AdminController {
                                        @RequestParam(value = "endDate", required = false) Date endDate) {
 
         List<PddOrderSummary> orderSummaryList = orderService.getOrderMapper().queryOrder(pddOrderNumber, orderStatus);
-
-//        for (PddOrderSummary order: orderSummaryList) {
-//            order.dbToRedableStatus();
-//        }
-
         RestResponse response = new RestResponse();
         response.setStatus(RestRepStatus.SUCCESS.name());
         response.setMessage("成功");
@@ -238,7 +308,6 @@ public class AdminController {
                                        @RequestParam(value = "searchText", required = false) String searchText,
                                        @RequestParam(value = "startDate", required = false) String startDate,
                                        @RequestParam(value = "endDate", required = false) String endDate) {
-
         RestResponse response = new RestResponse();
         response.setStatus(RestRepStatus.SUCCESS.name());
         response.setMessage("成功");
@@ -267,7 +336,6 @@ public class AdminController {
             orderIds.add(orderSummary.getId());
         }
 
-
         orderService.getOrderMapper().deleteOrders(orderIds);
 
         RestResponse response = new RestResponse();
@@ -293,7 +361,7 @@ public class AdminController {
 
 
     @GetMapping("/queryOrder")
-    RestResponse queryOrder(@RequestParam("order_number") String orderNumber, HttpSession session) throws NoSuchAlgorithmException {
+    RestResponse queryOrder(@RequestParam("order_number") String orderNumber) throws NoSuchAlgorithmException {
         RestResponse response = new RestResponse();
         PddOrderSummary summary = this.orderService.getOrderMapper().queryOrderByNumber(orderNumber);
         if(summary != null) {

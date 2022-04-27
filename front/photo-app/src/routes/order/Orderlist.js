@@ -51,11 +51,12 @@ export const Orderlist = () => {
       {
         !queryOrderFaied &&
         orderArr.map((element,index) => {
+          console.log("key ----- " + element.pddOrderNumber);
           return <OrderItemOverview order={element} key={element.pddOrderNumber}/>
         })
         ||
         queryOrderFaied &&
-        <p>订单不存在，请检查订单号，或者<Link to={"/order/add"} >录入订单</Link></p>
+        <p>订单不存在，请检查订单号，或者<li className="nav-item nav-link"><Link to={"/order/add"} >录入订单</Link></li></p>
       }
         
     </div>

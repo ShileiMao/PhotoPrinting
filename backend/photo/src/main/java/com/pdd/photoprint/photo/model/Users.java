@@ -15,7 +15,7 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-@AllArgsConstructor
+//@AllArgsConstructor
 @TableName("users")
 public class Users {
     @TableId(value = "id", type = IdType.AUTO)
@@ -48,11 +48,11 @@ public class Users {
     @TableField("user_type")
     private String userType;
 
-    public Users(String name, String loginName, UserLoginType loginType, UserType userType, boolean allowLogin) {
-        this.name = name;
-        this.loginName = loginName;
-        this.loginType = loginType.getType();
-        this.userType = userType.getType();
-        this.allowLogin = allowLogin ? 1 : 0;
-    }
+//    public Users(String name, String loginName, UserLoginType loginType, UserType userType, boolean allowLogin) {
+//        this.name = name;
+//        this.loginName = loginName;
+//        this.loginType = loginType.getType();
+//        this.userType = userType.getType();
+//        this.allowLogin = allowLogin ? 1 : 0;
+//    }
 }

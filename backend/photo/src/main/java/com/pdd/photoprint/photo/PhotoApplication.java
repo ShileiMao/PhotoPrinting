@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication(scanBasePackages = {"com.pdd.photoprint.photo"})
 @EnableConfigurationProperties(StorageProperties.class)
+//@EnableRedisHttpSession
 @MapperScan(basePackages = {"com.pdd.photoprint.photo.mapper"})
 public class PhotoApplication extends SpringBootServletInitializer {
 

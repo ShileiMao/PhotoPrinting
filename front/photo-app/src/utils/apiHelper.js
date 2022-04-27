@@ -58,7 +58,7 @@ export function apiDelete(url, data = {}, params = {}) {
     let params1 = {...params, ...authHeaders}
 
     console.log("data sending: " + JSON.stringify(data));
-    return _delete(url, authHeaders, data);
+    return _delete(url, params1, data);
 }
 
 export async function queryPhotos(pddOrderNumber) {
@@ -100,6 +100,25 @@ export async function changePwd(userName, pwd, newPwd) {
 
     const response = await post(url, postData)
     return response
+}
+
+export async function createUser(data) {
+    const url = `/admin/createUser`
+
+    const sha256 = require('js-sha256');
+    const encryptedPwd = sha256.sha256(data.pwd);
+    
+    let postData = {...data};
+    postData.pwd = encryptedPwd;
+
+    const response = await apiPost(url, postData);
+    return response;
+}
+
+export async function getUsers() {
+    const url = `/admin/getUsers`
+    const response = await apiGet(url);
+    return response;
 }
 
 export async function logout(userName, pwd) {

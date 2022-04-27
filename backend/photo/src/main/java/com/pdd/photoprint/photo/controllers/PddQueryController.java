@@ -47,19 +47,6 @@ public class PddQueryController {
 
         PddOrderSummary summary = orderMapper.queryOrderByNumber(orderNumber);
         if(summary != null) {
-            Users user = guaranteeUser(orderNumber);
-            String accessToken = AccessTokenGenerator.refreshUserAccessToken(user, orderNumber, userAccessTokenMapper);
-
-//            summary.dbToRedableStatus();
-            System.out.println("access token: " + accessToken);
-
-            session.setAttribute("user_login", orderNumber);
-            session.setAttribute("access_token", accessToken);
-            session.setAttribute("user_type", UserType.ANONYMOUS.getType());
-
-            summary.setUserType(UserType.ANONYMOUS.getType());
-            summary.setAccessToken(accessToken);
-
             response.setStatus(RestRepStatus.SUCCESS.name());
             response.setMessage("成功!");
             response.setData(summary);
@@ -96,13 +83,13 @@ public class PddQueryController {
         return response;
     }
 
-    private Users guaranteeUser(String orderNumber) {
-        Users user = userMapper.queryAnonymousUserByLoginName(orderNumber);
-        if(user == null) {
-            user = new Users("匿名用户", orderNumber, UserLoginType.ANONYMOUS, UserType.ANONYMOUS, false);
-            userMapper.insert(user);
-        }
-
-        return user;
-    }
+//    private Users guaranteeUser(String orderNumber) {
+//        Users user = userMapper.queryAnonymousUserByLoginName(orderNumber);
+//        if(user == null) {
+//            user = new Users("匿名用户", orderNumber, UserLoginType.ANONYMOUS, UserType.ANONYMOUS, false);
+//            userMapper.insert(user);
+//        }
+//
+//        return user;
+//    }
 }

@@ -48,6 +48,9 @@ public class Orders {
     @TableField("title")
     private String title;
 
+    @TableField("user_name")
+    private String userName;
+
     @TableField("description")
     private String description;
 

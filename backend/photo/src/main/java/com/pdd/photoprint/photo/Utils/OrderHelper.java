@@ -131,6 +131,11 @@ public class OrderHelper {
             return response;
         }
 
+        if(StringUtils.isEmpty(addOrderDTO.getUserName())) {
+            response.setError("请输入用户名");
+            return response;
+        }
+
         if(addOrderDTO.getNumPhotos() <= 0) {
             response.setError("请输入照片数量");
             return response;
@@ -171,11 +176,13 @@ public class OrderHelper {
 
     public void copyOrderProperties(AddOrderDTO addOrderDTO, Orders newOrder) {
         newOrder.setPddOrderNumber(addOrderDTO.getPddOrderNumber());
-        newOrder.setStatus(addOrderDTO.getStatus().getValue());
         newOrder.setTitle(addOrderDTO.getTitle());
+        newOrder.setUserName(addOrderDTO.getUserName());
         newOrder.setDescription(addOrderDTO.getDescription());
         newOrder.setNumPhotos(addOrderDTO.getNumPhotos());
         newOrder.setPhotoSize(addOrderDTO.getPhotoSize().getValue());
         newOrder.setPackaging(addOrderDTO.getPackaging().getValue());
+        newOrder.setStatus(addOrderDTO.getStatus().getValue());
+        newOrder.setPhoneNumber(addOrderDTO.getPhoneNumber());
     }
 }

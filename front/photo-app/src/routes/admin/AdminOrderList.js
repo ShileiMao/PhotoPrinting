@@ -10,9 +10,11 @@ import DateUtils from '../../utils/DateUtils'
 import SortableTableHeader from '../../Components/SortableTableHeader'
 import { OrderStatus } from '../../config/Consts'
 import ToastHelper from '../../utils/toastHelper'
+import { Dialog } from '../../Components/Dialog'
+import { AlertDialog } from '../../Components/AlertDialog'
 
 class AdminOrderList extends Component {
-  constructor(props) {
+  constructor({props, showModal}) {
       super(props)
 
       let dateUtils = new DateUtils();
@@ -22,6 +24,7 @@ class AdminOrderList extends Component {
       let startOfMonth = dateUtils.getStartOfDay();
 
       this.state = {
+          showModal: showModal,
           data: [],
           pageInfo: null,
           selectAll: false,
@@ -33,6 +36,7 @@ class AdminOrderList extends Component {
           pageSize: 10,
           startDate: startOfMonth,
           endDate: endOfDay,
+          showConfirmDialog: false
       }
       this.loadTable = this.loadTable.bind(this);
       this.deleteSelected = this.deleteSelected.bind(this);
@@ -47,6 +51,8 @@ class AdminOrderList extends Component {
       this.onSortChanged = this.onSortChanged.bind(this);
       this.prePage = this.prePage.bind(this);
       this.nextPage = this.nextPage.bind(this);
+      this.confirmDelete = this.confirmDelete.bind(this);
+      this.dismissDialog = this.dismissDialog.bind(this);
   }
 
   async loadTable(pageIndex) {
@@ -65,9 +71,8 @@ class AdminOrderList extends Component {
         startDate, 
         endDate);
 
-    console.log("load table with search status: " + searchStatus);
     if(result.status.toLowerCase() === 'error') {
-        console.log("error loading order: " + result.error);
+        ToastHelper.showError("加载失败!");
         return;
     }
 
@@ -79,7 +84,6 @@ class AdminOrderList extends Component {
         pageIndex: pageIndex,
         selectAll: resetFlag
     })
-    console.log("table data: " + this.state.data.length)
   }
 
   async deleteSelected() {
@@ -87,10 +91,27 @@ class AdminOrderList extends Component {
       return item.checked === true;
     })
 
-    console.log("delete selected clicked, checkedItems: " + JSON.stringify(selectedOrders));
+    if(selectedOrders.length === 0) {
+      ToastHelper.showDefault("请选择订单");
+      return;
+    }
+
+    this.setState({showConfirmDialog: true})
+  }
+
+  dismissDialog() {
+    this.setState({showConfirmDialog: false})
+  }
+
+  async confirmDelete() {
+    this.dismissDialog()
+
+    const selectedOrders = this.state.data.filter(item => {
+      return item.checked === true;
+    })
     const result = await deleteOrders(selectedOrders);
-    console.log("delete result:")
     if(result.status.toLowerCase() === 'success') {
+      console.log("confirmed")
       ToastHelper.showDefault("成功!");
       this.loadTable(1);
       return;
@@ -151,7 +172,6 @@ class AdminOrderList extends Component {
   }
 
   onSortChanged(name, asending) {
-    console.log("sorted: " + name + ", asendign: " + asending);
     this.setState({
       orderBy: name,
       desc: !asending
@@ -266,15 +286,15 @@ class AdminOrderList extends Component {
                   <thead>
                   <tr>
                       <th>选择</th>
-                      <th>ID</th>
+                      <SortableTableHeader title={"ID"} sortKeyword="id" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <SortableTableHeader title={"名称"} sortKeyword="title" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <SortableTableHeader title={"描述"} sortKeyword="description" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
-                      <th>打印张数</th>
-                      <th>用户名</th>
-                      <th>电话</th>
-                      <th>地址</th>
-                      <th>日期</th>
-                      <th>状态</th>
+                      <SortableTableHeader title={"打印张数"} sortKeyword="num_photos" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"用户名"} sortKeyword="user_name" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"电话"} sortKeyword="phone_number" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"地址"} sortKeyword="address" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"日期"} sortKeyword="date_create" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      <SortableTableHeader title={"状态"} sortKeyword="status" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <th>操作</th>
                   </tr>
                   </thead>
@@ -300,9 +320,13 @@ class AdminOrderList extends Component {
                       </li>
                   </ul>
               </nav>
-        
           </div>
         </div>
+
+        {
+          this.state.showConfirmDialog &&
+          <AlertDialog title={"提示"} message={"确认删除？"} confirm={this.confirmDelete} cancel={this.dismissDialog}></AlertDialog>
+        }
       </div>
     )
   }
