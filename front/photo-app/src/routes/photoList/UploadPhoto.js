@@ -45,7 +45,7 @@ export default class UploadPhoto extends Component {
       myLogger.debug("item: " + JSON.stringify(item.file));
       return item.file;
     });
-
+    
     const response = await uploadImage(files, url, this.props.orderNumber);
     if(response.status.toLowerCase() !== 'success') {
       ToastHelper.showError(response.error || "上传失败");
@@ -55,6 +55,7 @@ export default class UploadPhoto extends Component {
     ToastHelper.showDefault("上传成功！");
 
     this.props.hideUpload();
+    this.props.refreshPhotoList();
   }
 
   render() {

@@ -6,7 +6,7 @@ export async function uploadImage(images, url, orderNumber) {
   images.forEach(element => {
     formData.append('files', element);
   });
-  const config = {
+  let config = {
     headers: {
       "Content-Type": "multipart/form-data",
     }

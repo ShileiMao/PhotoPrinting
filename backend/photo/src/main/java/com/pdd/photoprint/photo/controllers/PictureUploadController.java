@@ -2,8 +2,10 @@ package com.pdd.photoprint.photo.controllers;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.pdd.photoprint.photo.Configs.OrderPictureStatus;
@@ -109,6 +111,20 @@ public class PictureUploadController {
 		RestResponse response = new RestResponse();
 		PddOrderSummary orderSummary = orderMapper.queryOrderByNumber(orderNumber);
 
+		List<String> localFileNames = fileNames;
+		if(localFileNames == null) {
+			localFileNames = new ArrayList<>();
+			for(int i =0; i < fileList.length; i ++) {
+				String fileName = UUID.randomUUID().toString();
+				MultipartFile file = fileList[i];
+				String originalFilename = file.getOriginalFilename();
+				if(originalFilename.lastIndexOf('.') != -1) {
+					String extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+					fileName += extension;
+				}
+				localFileNames.add(fileName);
+			}
+		}
 		if(orderSummary == null) {
 			response.setStatus(RestRepStatus.ERROR.name());
 			response.setError("订单信息不存在，请重试！");
@@ -134,8 +150,8 @@ public class PictureUploadController {
 				}
 
 				String fileName = file.getOriginalFilename();
-				if(fileNames != null) {
-					fileName = fileNames.get(index);
+				if(localFileNames != null) {
+					fileName = localFileNames.get(index);
 				}
 
 				if(storageService.fileExists(orderNumber, fileName)) {
@@ -166,7 +182,7 @@ public class PictureUploadController {
 			response.setError("照片达到最大数量，不可继续上传!");
 			return response;
 		}
-		String[] paths = storageService.storeMultiple(Arrays.asList(fileList), orderNumber, fileNames, false);
+		String[] paths = storageService.storeMultiple(Arrays.asList(fileList), orderNumber, localFileNames, false);
 
 
 		int index = 0;

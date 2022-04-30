@@ -120,7 +120,7 @@ export default class OrderItemOverview extends Component {
 
       {
         this.state.uploadingPhoto &&
-        <UploadPhoto orderNumber={this.props.order.pddOrderNumber} hideUpload={this.toggleAddPhoto} ></UploadPhoto>
+        <UploadPhoto orderNumber={this.props.order.pddOrderNumber} hideUpload={this.toggleAddPhoto} refreshPhotoList={this.refreshPhotoList} ></UploadPhoto>
       }
     </div>
     )
