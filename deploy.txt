@@ -10,4 +10,6 @@ http://39.105.223.206
 /usr/local/tomcat/bin/catalina.sh start
 
 
+cat /usr/local/tomcat/logs/catalina.out
+
 /usr/local/Cellar/maven/apache-maven-3.8.2/bin/mvn

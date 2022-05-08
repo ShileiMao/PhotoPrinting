@@ -63,7 +63,7 @@ export function apiDelete(url, data = {}, params = {}) {
 
 export async function queryPhotos(pddOrderNumber) {
     const url = `/orders/${pddOrderNumber}/photos`
-    const response = await apiGet(url)
+    const response = await get(url)
     return response;
 }
 
@@ -210,7 +210,7 @@ export async function customerQueryOrder(orderNumber) {
 
 export async function customerAddOrder(data) {
     const url = `/pdd/order/add`
-    const result = await apiPost(url, data);
+    const result = await post(url, data);
     return result;
 }
 

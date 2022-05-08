@@ -50,6 +50,9 @@ public class PddQueryController {
             response.setStatus(RestRepStatus.SUCCESS.name());
             response.setMessage("成功!");
             response.setData(summary);
+
+//            String accessToken = AccessTokenGenerator.generateAccessToken("anonymous_user", userAccessTokenMapper);
+//            summary.setAccessToken(accessToken);
             return response;
         }
 
