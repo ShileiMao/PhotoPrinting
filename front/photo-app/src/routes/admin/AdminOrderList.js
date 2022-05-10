@@ -1,17 +1,16 @@
 import React, { Component } from 'react'
 import AdminPageHeader from '../../Components/AdminPageHeader'
 import { OrderRow } from '../../Components/OrderRow'
-import { deleteOrders, loadOrders, loadOrdersPage } from '../../utils/apiHelper'
+import { checkFinishedOrders, deleteOrders, loadOrders, loadOrdersPage, updateOrderStatus, updateOrderStatusMultiple } from '../../utils/apiHelper'
 import { withRouter } from '../../utils/react-router'
 import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css";
-import { Col, Container, Row, ToastHeader } from 'react-bootstrap'
+import { Col, Container, OffcanvasBody, Row, ToastHeader } from 'react-bootstrap'
 import DateUtils from '../../utils/DateUtils'
 import SortableTableHeader from '../../Components/SortableTableHeader'
-import { OrderStatus } from '../../config/Consts'
+import { findOptionForDbValue, OrderStatus, OrderStatusHash } from '../../config/Consts'
 import ToastHelper from '../../utils/toastHelper'
 import { Dialog } from '../../Components/Dialog'
-import { AlertDialog } from '../../Components/AlertDialog'
 
 class AdminOrderList extends Component {
   constructor({props, showModal}) {
@@ -36,7 +35,12 @@ class AdminOrderList extends Component {
           pageSize: 10,
           startDate: startOfMonth,
           endDate: endOfDay,
-          showConfirmDialog: false
+          showConfirmDialog: false,
+          alertTitle: "",
+          alertCancelCallback: null,
+          alertConfirmCallback: null,
+          dynamicAlertContent: null,
+          manageSelectedStatus: null,
       }
       this.loadTable = this.loadTable.bind(this);
       this.deleteSelected = this.deleteSelected.bind(this);
@@ -51,8 +55,10 @@ class AdminOrderList extends Component {
       this.onSortChanged = this.onSortChanged.bind(this);
       this.prePage = this.prePage.bind(this);
       this.nextPage = this.nextPage.bind(this);
-      this.confirmDelete = this.confirmDelete.bind(this);
       this.dismissDialog = this.dismissDialog.bind(this);
+      this.showManageOptions = this.showManageOptions.bind(this);
+      this.returnDynamicContent = this.returnDynamicContent.bind(this);
+      this.hasSelectedItem = this.hasSelectedItem.bind(this);
   }
 
   async loadTable(pageIndex) {
@@ -86,40 +92,133 @@ class AdminOrderList extends Component {
     })
   }
 
+  returnDynamicContent() {
+    return this.state.dynamicAlertContent;
+  }
+  /**
+   * 删除按钮回调，显示确认对话框
+   */
   async deleteSelected() {
+    // 过滤已经选择的订单
     const selectedOrders = this.state.data.filter(item => {
       return item.checked === true;
     })
 
+    // 未选择订单
     if(selectedOrders.length === 0) {
       ToastHelper.showDefault("请选择订单");
       return;
     }
 
-    this.setState({showConfirmDialog: true})
+    // 确认回调
+    const confirmDelete = async() => {
+      this.dismissDialog()
+  
+      const selectedOrders = this.state.data.filter(item => {
+        return item.checked === true;
+      })
+      const result = await deleteOrders(selectedOrders);
+      if(result.status.toLowerCase() === 'success') {
+        console.log("confirmed")
+        ToastHelper.showDefault("成功!");
+        this.loadTable(1);
+        return;
+      }
+  
+      ToastHelper.showDefault("操作失败!");
+      this.loadTable(1);
+    }
+
+    this.setState({showConfirmDialog: true,
+      alertTitle: "警告",
+      dynamicAlertContent: <>确认删除？</>,
+      alertConfirmCallback: confirmDelete,
+      alertCancelCallback: null
+    });
+  }
+
+
+  /**
+   * 管理按钮回调，修改订单状态
+   */
+  showManageOptions() {
+    // 过滤已经选择的订单
+    const selectedOrders = this.state.data.filter(item => {
+      return item.checked === true;
+    })
+
+    // 未选择订单
+    if(selectedOrders.length === 0) {
+      ToastHelper.showDefault("请选择订单");
+      return;
+    }
+
+    const onSelectStatus = (event) => {
+      this.setState({
+        manageSelectedStatus: event.target.value
+      })
+    }
+
+    const confirmCallback = async () => {
+      let newOrders = selectedOrders.map (item => {
+        item.status = this.state.manageSelectedStatus;
+        return item;
+      })
+      const response = await updateOrderStatusMultiple(newOrders);
+      if(response.status.toLowerCase() !== 'success') {
+        ToastHelper.showError("更新失败: " + response.error);
+        this.loadTable(1);
+        return;
+      }
+
+      if(this.state.manageSelectedStatus === OrderStatusHash.FINISH.dbValue.toString()) {
+        checkFinishedOrders();
+      }
+
+      this.loadTable(1);
+      return;
+    }
+
+    const unapproved = findOptionForDbValue(OrderStatus, -1);
+    const approved = findOptionForDbValue(OrderStatus, selectedOrders[0].status);
+
+    let options = OrderStatus.filter(item => {
+      return item.dbValue > approved.dbValue
+    });
+
+    if(selectedOrders[0].status == unapproved.dbValue) {
+      options = [approved];
+    }
+
+    console.log("---new options --: " + JSON.stringify(options));
+
+    const dynamicContent = <>
+      <div className='col-4'>
+        <label>修改状态：</label>
+        <select className='form-select' defaultValue={selectedOrders[0].status} onChange={onSelectStatus}>
+          {
+            options.map(item => {
+              return <option key={item.value} value={item.dbValue}>{item.text}</option>
+            })
+          }
+        </select>
+      </div>
+    </>;
+
+    this.setState({
+      manageSelectedStatus: options[0].dbValue, //设置默认选择值
+      showConfirmDialog: true,
+      alertTitle: "编辑",
+      dynamicAlertContent:  dynamicContent,
+      alertCancelCallback: null,
+      alertConfirmCallback: confirmCallback
+    })
   }
 
   dismissDialog() {
     this.setState({showConfirmDialog: false})
   }
-
-  async confirmDelete() {
-    this.dismissDialog()
-
-    const selectedOrders = this.state.data.filter(item => {
-      return item.checked === true;
-    })
-    const result = await deleteOrders(selectedOrders);
-    if(result.status.toLowerCase() === 'success') {
-      console.log("confirmed")
-      ToastHelper.showDefault("成功!");
-      this.loadTable(1);
-      return;
-    }
-
-    ToastHelper.showDefault("操作失败!");
-    this.loadTable(1);
-  }
+  
 
   selectAll() {
     const allSelected = this.state.data.map(item => {
@@ -131,6 +230,15 @@ class AdminOrderList extends Component {
       data: allSelected,
       selectAll: !this.state.selectAll
     });
+  }
+
+  hasSelectedItem() {
+    for(let index = 0; index < this.state.data.length; index ++) {
+      if(this.state.data[index].checked === true) {
+        return true;
+      }
+    }
+    return false;
   }
 
   toggleOrderCheck(order) {
@@ -213,7 +321,6 @@ class AdminOrderList extends Component {
     } else {
       this.loadTable(previousPage);
     }
-    
   }
 
   render() {
@@ -262,8 +369,15 @@ class AdminOrderList extends Component {
                 <br />
                 <Row gy={5}>
                   <Col>
-                    <button className='btn btn-secondary btn-sm' onClick={this.selectAll}>全选</button>
-                    <button className='btn btn-primary btn-sm' onClick={this.deleteSelected}>删除</button>
+                    <button className='btn btn-secondary btn-sm' onClick={this.selectAll}>全 选</button>
+                    
+                    {
+                      this.hasSelectedItem() &&
+                      <>
+                        &nbsp;
+                        <button className='btn btn-primary btn-sm' onClick={this.deleteSelected}>删 除</button>
+                      </>
+                    }
                   </Col>
 
                   <Col md={4}>
@@ -273,7 +387,15 @@ class AdminOrderList extends Component {
                   </Col>
 
                   <Col>
-                    <button className='btn btn-primary btn-sm' onClick={this.onSearchButtonClicked} title="查询">查 询</button>
+                  
+                    <button className='btn btn-secondary btn-sm' onClick={this.onSearchButtonClicked} title="查询">查 询</button>
+                    {
+                      this.hasSelectedItem() &&
+                      <>
+                        &nbsp;
+                        <button className='btn btn-primary btn-sm' onClick={this.showManageOptions} title="管理">管 理</button>
+                      </>
+                    }
                   </Col>
                 </Row>
                 
@@ -323,9 +445,16 @@ class AdminOrderList extends Component {
           </div>
         </div>
 
+
+        <Dialog show={this.state.showConfirmDialog} 
+                  dismiss={this.dismissDialog} 
+                  generateContent={this.returnDynamicContent} 
+                  title={this.state.alertTitle}
+                  cancelClicked={this.state.alertCancelCallback} 
+                  confirmClicked={this.state.alertConfirmCallback} />
         {
-          this.state.showConfirmDialog &&
-          <AlertDialog title={"提示"} message={"确认删除？"} confirm={this.confirmDelete} cancel={this.dismissDialog}></AlertDialog>
+          // this.state.showConfirmDialog &&
+          // <AlertDialog title={"提示"} message={"确认删除？"} confirm={this.confirmDelete} cancel={this.dismissDialog}></AlertDialog>
         }
       </div>
     )

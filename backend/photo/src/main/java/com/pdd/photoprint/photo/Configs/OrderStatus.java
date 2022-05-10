@@ -72,5 +72,4 @@ public enum OrderStatus {
                 return OrderStatus.NEW;
         }
     }
-
 }

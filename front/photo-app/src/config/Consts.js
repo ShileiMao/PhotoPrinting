@@ -61,6 +61,81 @@ export const OrderStatus = [
   },
 ]
 
+export const OrderStatusHash = {
+  UNPROVED: {
+    value: `UNPROVED`,
+    dbValue: -1,
+    text: "未审核"
+  },
+  NEW: {
+    value: `NEW`,
+    dbValue: 0,
+    text: "待处理"
+  },
+  PRINTED: {
+    value: `PRINTED`,
+    dbValue: 1,
+    text: "已打印"
+  },
+  POSTED: {
+    value: `POSTED`,
+    dbValue: 2,
+    text: "已邮递"
+  },
+  COLLECTED: {
+    value: `COLLECTED`,
+    dbValue: 3,
+    text: "已收货"
+  },
+  CONFIRMED: {
+    value: `CONFIRMED`,
+    dbValue: 4,
+    text: "已确认"
+  },
+  FINISH: {
+    value: `FINISH`,
+    dbValue: 5,
+    text: "结束"
+  },
+  INVALID: {
+    value: `INVALID`,
+    dbValue: 6,
+    text: "失效"
+  },
+  REPORT_WAITING: {
+    value: `REPORT_WAITING`,
+    dbValue: 7,
+    text: "投诉待处理"
+  },
+  REPORT_PROCESSING: {
+    value: `REPORT_PROCESSING`,
+    dbValue: 8,
+    text: "投诉处理中"
+  },
+  REPORT_PROCESSED: {
+    value: `REPORT_PROCESSED`,
+    dbValue: 9,
+    text: "投诉已处理"
+  },
+  REPORT_REJECTED: {
+    value: `REPORT_REJECTED`,
+    dbValue: 10,
+    text: "投诉已驳回"
+  },
+}
+
+/**
+ * 
+ * @param {Object} option 定义的enum列表
+ * @param {Int} dbValue 数据库的值
+ * @returns 
+ */
+export const findOptionForDbValue = (option, dbValue) => {
+  const item = option.find(element => {
+    return element.dbValue === dbValue
+  });
+  return item;
+}
 /**
  * 由于Java的enum类型自动转换，需要将数据库存储类型转换成定义的Enum名称，所以此处需要转换一下
  * @param {Integer} dbValue 数据库中存储的值

@@ -22,6 +22,8 @@ export function getToken(tokenKey) {
  * @param {String} token 
  */
 export function storeToken(tokenKey, token) {
+  console.warn("---- store token ---: ")
+  console.warn(tokenKey + ":" + token);
   localStorage.setItem(tokenKey, token);
 }
 

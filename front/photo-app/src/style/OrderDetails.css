@@ -23,3 +23,9 @@
     width: 80px;
 }
 
+.order-row-size-packing {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 120px;
+}
+

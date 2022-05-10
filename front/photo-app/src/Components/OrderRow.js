@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { OrderStatus, toRedableOptionText } from '../config/Consts'
+import { findOptionForDbValue, OrderStatus, OrderStatusHash, toRedableOptionText } from '../config/Consts'
 
 export const OrderRow = ({props, order, toggleCheck}) => {
   const navigate = useNavigate()
@@ -19,7 +19,18 @@ export const OrderRow = ({props, order, toggleCheck}) => {
     toggleCheck(order);
   }
 
+  const getDate = () => {
+    const finishStatus = OrderStatusHash.FINISH;
+    const invalidStatus = OrderStatusHash.INVALID;
 
+    if(order.status === finishStatus.dbValue) {
+      return order.dateComplete;
+    }
+    if(order.status === invalidStatus.dbValue) {
+      return order.dateDelete;
+    }
+    return order.dateCreate;
+  }
   return (
     <tr>
         <td><input type="checkbox" className='form-check-input' checked={order.checked || false} onChange={handleClick} /></td>
@@ -30,7 +41,7 @@ export const OrderRow = ({props, order, toggleCheck}) => {
         <td>{"拼多多用户"}</td>
         <td>{order.phoneNumber}</td>
         <td>{order.postAddressStr}</td>
-        <td>{order.dateCreate}</td>
+        <td>{getDate()}</td>
         <td>{toRedableOptionText(OrderStatus, order.status)}</td>
         <td className='row d-flex col-sm-10'>
           <button className='btn btn-outline-secondary btn-sm' onClick={openOrder}>查看</button>

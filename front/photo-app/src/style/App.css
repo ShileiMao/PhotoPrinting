@@ -80,14 +80,25 @@
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 20px;
-  position: relative;
 }
 
 .image-item {
-  size: 120px 120px;
-  flex-direction: column;
-  flex-wrap: wrap;
-  flex: 1 1 120px;
+  width: 140px;
+  height: auto;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.img-item-warning-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate( -50%, -50% );
+  text-align: center;
+  color: white;
+  font-size: x-small;
+  background-color: rgba(0, 0, 0, 0.713);
 }
 
 .image-item__btn-wrapper {

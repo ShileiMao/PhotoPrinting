@@ -1,15 +1,20 @@
 import React, { useState } from 'react'
 import { Button, Modal} from 'react-bootstrap'
 
-export const Dialog = ({show, setShow, title, generateContent, cancelClicked, confirmClicked}) => {
+export const Dialog = ({show, dismiss, title, generateContent, cancelClicked, confirmClicked}) => {
 
   const handleClose = () => { 
-    setShow(false);
-    cancelClicked();
+    dismiss(false);
+
+    if(cancelClicked) {
+      cancelClicked();
+    }
   }
   const handleConfirm = () => {
-    setShow(false);
-    confirmClicked();
+    dismiss(false);
+    if(confirmClicked) {
+      confirmClicked();
+    }
   }
 
   return (
@@ -27,9 +32,12 @@ export const Dialog = ({show, setShow, title, generateContent, cancelClicked, co
           <Button variant="secondary" onClick={handleClose}>
             取 消
           </Button>
-          <Button variant="primary" onClick={handleConfirm}>
-            确 认
-          </Button>
+          {
+            confirmClicked && 
+            <Button variant="primary" onClick={handleConfirm}>
+              确 认
+            </Button>
+          }
         </Modal.Footer>
       </Modal>
     </>

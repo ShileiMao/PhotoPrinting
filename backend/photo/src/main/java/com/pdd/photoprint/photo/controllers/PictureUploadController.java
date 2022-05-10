@@ -112,6 +112,7 @@ public class PictureUploadController {
 		PddOrderSummary orderSummary = orderMapper.queryOrderByNumber(orderNumber);
 
 		List<String> localFileNames = fileNames;
+		/* 允许上传重复照片
 		if(localFileNames == null) {
 			localFileNames = new ArrayList<>();
 			for(int i =0; i < fileList.length; i ++) {
@@ -125,6 +126,7 @@ public class PictureUploadController {
 				localFileNames.add(fileName);
 			}
 		}
+		*/
 		if(orderSummary == null) {
 			response.setStatus(RestRepStatus.ERROR.name());
 			response.setError("订单信息不存在，请重试！");

@@ -94,6 +94,7 @@ _axios.interceptors.request.use(
     } else {
       // TODO: 其他类型请求数据格式处理
       /* eslint-disable-next-line */
+      console.log("--- put")
       console.warn(`其他请求类型: ${reqConfig.method}, 暂无自动处理`)
     }
     return reqConfig
@@ -162,7 +163,7 @@ export function get(url, params = {}) {
  * @param {object} data
  * @param {object} params
  */
-export function put(url, data = {}, params = {}) {
+export function put(url, params = {}, data = {},) {
   return _axios({
     method: 'put',
     url,

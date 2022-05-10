@@ -1,6 +1,6 @@
 import React, { Component, useContext } from 'react'
 import { PrintLayout } from '../photosLayouts/PrintLayout';
-import { loadOrders, queryPhotos, toDataURL, updatePhotoStatus } from '../../utils/apiHelper';
+import { deleteSelectedPhotos, loadOrders, queryPhotos, toDataURL, updateOrderStatus, updatePhotoStatus } from '../../utils/apiHelper';
 import myLogger from '../../utils/logger';
 import ReactToPrint from "react-to-print"
 import Config from '../../config/webConf';
@@ -10,6 +10,9 @@ import { withRouter } from '../../utils/react-router';
 import ic_print from '../../imgs/ic_print.svg'
 import OrderOverView from '../../Components/OrderOverView';
 import { Dialog } from '../../Components/Dialog';
+import { findOptionForDbValue, OrderStatus, PhotoPrintStatus } from '../../config/Consts';
+import { Toast, ToastHeader } from 'react-bootstrap';
+import ToastHelper from '../../utils/toastHelper';
 
 class AdminOrderDetails extends Component {
   constructor(props) {
@@ -20,7 +23,11 @@ class AdminOrderDetails extends Component {
           photoToPrint: [],
           selectAll: false,
           orderNumber: this.props.match.params.orderNum,
-          showAlert: false
+          showAlert: false,
+          alertTitle: "",
+          alertText: "",
+          alertCancelCallback: null,
+          alertConfirmCallback: null
       }
       // const orderNumber = this.props.match.params.orderNum;
 
@@ -29,9 +36,13 @@ class AdminOrderDetails extends Component {
       this.getpageStyle = this.getpageStyle.bind(this);
       this.downloadPrintintImages = this.downloadPrintintImages.bind(this);
       this.photoPrintFinished = this.photoPrintFinished.bind(this);
-      this.setAlertShow = this.setAlertShow.bind(this);
-      this.printedAlertCancel = this.printedAlertCancel.bind(this);
-      this.printedAlertConfirm = this.printedAlertConfirm.bind(this);
+      this.dismissAlert = this.dismissAlert.bind(this);
+      this.approvalOrder = this.approvalOrder.bind(this);
+      this.maintainOrderStatus = this.maintainOrderStatus.bind(this)
+      this.getAlertContent = this.getAlertContent.bind(this);
+      this.showDeleteConfirm = this.showDeleteConfirm.bind(this);
+      this.toggleSelectAll = this.toggleSelectAll.bind(this);
+      this.hasSelectedPhoto = this.hasSelectedPhoto.bind(this);
   }
   
   async refreshPhotoList() {
@@ -60,6 +71,8 @@ class AdminOrderDetails extends Component {
 
     this.setState({
       allPhotos: photoList
+    }, () => {
+      this.maintainOrderStatus()
     })
   }
 
@@ -75,6 +88,30 @@ class AdminOrderDetails extends Component {
     this.setState({
       allPhotos: allPhotos
     })
+  }
+
+  toggleSelectAll() {
+    const selectedAll = this.state.selectAll;
+    let allPhotos = this.state.allPhotos;
+    
+    allPhotos.forEach(item => {
+      item.isSelected = !selectedAll;
+    })
+    
+    this.setState({
+      selectAll: !selectedAll,
+      allPhotos: allPhotos
+    });
+  }
+
+  hasSelectedPhoto() {
+    const allPhotos = this.state.allPhotos;
+    for(let index = 0; index < allPhotos.length; index ++) {
+      if(allPhotos[index].isSelected === true) {
+        return true;
+      }
+    }
+    return false;
   }
 
   componentDidMount() {
@@ -127,38 +164,112 @@ class AdminOrderDetails extends Component {
   }
 
   async photoPrintFinished(params) {
+    const printedAlertConfirm = async () => {
+      await Promise.all(this.state.photoToPrint.map(async (element) => {
+        const imageId = element.pictureId;
+        const orderNum = element.pddOrderNumber;
+  
+        await updatePhotoStatus(orderNum, imageId, 1);
+      }));
+  
+      this.maintainOrderStatus();
+      this.refreshPhotoList()
+    }
+
     console.log("photo print finished: " + params);
     this.setState({
-      showAlert: true
+      showAlert: true,
+      alertText: "照片已打印？",
+      alertCancelCallback: null,
+      alertConfirmCallback: printedAlertConfirm
     })
   }
 
-  setAlertShow(show) {
+  
+  async showDeleteConfirm() {
+    
+    const selected = this.state.allPhotos.filter(item => {
+      return item.isSelected === true
+    })
+
+    if(selected.length === 0) {
+      this.setState({
+        showAlert: true,
+        alertTitle: "提示",
+        alertText: "未选择照片",
+        alertCancelCallback: null,
+        alertConfirmCallback: null
+      })
+      return;
+    }
+
+    const deleteConfirmed = async () => {
+      console.log("photo delete confirm");
+      const selected = this.state.allPhotos.filter(item => {
+        return item.isSelected === true
+      })
+      const photoIds = selected.map (item => {
+        return item.pictureId
+      })
+
+      const response = await deleteSelectedPhotos(this.state.orderNumber, photoIds)
+      if(response.status.toLowerCase() !== 'success') {
+        ToastHelper.showError("操作失败");
+        this.refreshPhotoList()
+        return;  
+      }
+
+      this.refreshPhotoList()
+    }
+    
+    this.setState({
+      showAlert: true,
+      alertTitle: "删除照片",
+      alertText: "删除照片？",
+      alertCancelCallback: null,
+      alertConfirmCallback: deleteConfirmed
+    })
+  } 
+
+  dismissAlert(show) {
     this.setState({
       showAlert: show
     });
   }
 
-  getPrintFinishedDialog() {
+  getAlertContent() {
     return(<>
-      照片已打印？
+      {this.state.alertText}
     </>)
   }
 
-  printedAlertCancel() {
 
+  // 审核通过
+  async approvalOrder() {
+    const approved = findOptionForDbValue(OrderStatus, 0);  // 获取审核通过的状态
+    await updateOrderStatus(this.state.orderNumber, approved.value)
+
+    this.refreshPhotoList()
   }
 
-  async printedAlertConfirm() {
-    await Promise.all(this.state.photoToPrint.map(async (element) => {
-      const imageId = element.pictureId;
-      const orderNum = element.pddOrderNumber;
 
-      await updatePhotoStatus(orderNum, imageId, 1);
-    }));
-    
-    window.location.reload()
-    // this.forceUpdate();
+  async maintainOrderStatus() {
+    //已打印的照片
+    const printedStatus = findOptionForDbValue(PhotoPrintStatus, 1);
+    const unprintedPhoto = this.state.allPhotos.filter(item => {
+      return item.status !== printedStatus.dbValue;
+    })
+    const printedPhoto = this.state.allPhotos.filter (item => {
+      return item.status === printedStatus.dbValue;
+    })
+
+    if(unprintedPhoto.length === 0 && printedPhoto.length >= this.state.order.numPhotos) {
+      console.log("all printed")
+      const printedState = findOptionForDbValue(OrderStatus, 1);
+      const result = await updateOrderStatus(this.state.orderNumber, printedState.value);
+    } else {
+      console.log("not all printed")
+    }
   }
 
   render() {
@@ -175,27 +286,57 @@ class AdminOrderDetails extends Component {
 
               <div>
                   <PrintLayout images={this.state.photoToPrint} 
-                  selectAll={false} 
+                  selectAll={this.state.selectAll} 
                   appendSelected={this.appendSelected} 
                   ref={el => (this.componentRef = el)}/>
               </div>
               {
                 this.state.showAlert &&
                 <Dialog show={this.state.showAlert} 
-                  setShow={this.setAlertShow} 
-                  generateContent={this.getPrintFinishedDialog} 
-                  title="更新状态？" 
-                  cancelClicked={this.printedAlertCancel} 
-                  confirmClicked={this.printedAlertConfirm} />
+                  dismiss={this.dismissAlert} 
+                  generateContent={this.getAlertContent} 
+                  title={this.state.alertTitle}
+                  cancelClicked={this.state.alertCancelCallback} 
+                  confirmClicked={this.state.alertConfirmCallback} />
               }
               <div z-index="1000" className="Bottom-Floating-Options">
-                <ReactToPrint
-                  trigger={() => { return <a href='#'><img src={ic_print} style={{width: `45px`, height: `45px`}}></img></a>}}
-                  content={() => this.componentRef}
-                  onBeforeGetContent={this.downloadPrintintImages}
-                  onAfterPrint={this.photoPrintFinished}
-                >
-                </ReactToPrint>
+                {
+                  this.state.order.status >= findOptionForDbValue(OrderStatus, 0).dbValue
+                  //订单状态为已审核
+                  ? 
+                  <div>
+                    {/* <ReactToPrint
+                      trigger={() => { return <a href='#'><img src={ic_print} style={{width: `45px`, height: `45px`}}></img></a>}}
+                      content={() => this.componentRef}
+                      onBeforeGetContent={this.downloadPrintintImages}
+                      onAfterPrint={this.photoPrintFinished}
+                    >
+                    </ReactToPrint> */}
+
+                    <button className='btn btn-info btn-sm' onClick={this.toggleSelectAll}>全选</button>
+                    &nbsp;
+                    {
+                      this.hasSelectedPhoto() &&
+                      <>
+                        <ReactToPrint
+                          trigger={() => { return <button className='btn btn-primary btn-sm' onClick={this.showDeleteConfirm}>打印</button>}}
+                          content={() => this.componentRef}
+                          onBeforeGetContent={this.downloadPrintintImages}
+                          onAfterPrint={this.photoPrintFinished}
+                        >
+                        </ReactToPrint>
+                        &nbsp;
+                      </>
+                    }
+                    <button className='btn btn-secondary btn-sm' onClick={this.showDeleteConfirm}>删除</button>
+                  </div>
+                    
+                  //订单状态为未审核
+                  : 
+                   <button className='btn btn-primary btn-sm' onClick={this.approvalOrder}>
+                     审核通过
+                   </button>
+                }
               </div>
           </div>
         }

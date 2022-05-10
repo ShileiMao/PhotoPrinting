@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminOrderFrom from "../../Components/AdminOrderFrom";
 import AdminPageHeader from "../../Components/AdminPageHeader";
-import { addminAddOrder, adminEditOrder } from "../../utils/apiHelper";
+import { addminAddOrder, adminEditOrder, adminQueryOrder } from "../../utils/apiHelper";
 import { get } from "../../utils/axios";
 import myLogger from "../../utils/logger";
 import { StringUtils } from "../../utils/StringUtils";
@@ -22,8 +22,8 @@ export default function AdminAddOrder({isEditing}) {
     }
     
     const queryOrderReq = async () => {
-      let response = await get("/admin/queryOrder", {order_number: orderNum})
-
+      let response = await adminQueryOrder(orderNum)
+      
       if(response === null || response.status.toLowerCase() === 'error') {
         ToastHelper.showError(response.error || "加载订单信息失败，请重试");
         setOrderNotExists(true);

@@ -104,11 +104,16 @@ export default class OrderItemOverview extends Component {
             <p>
               {/* <button className='btn btn-primary' onClick={this.toggleSelectAll}>选定所有</button>
               <br/> */}
-              <button className='btn btn-primary btn-sm' onClick={this.toggleAddPhoto}>
-                添加&nbsp;
-                <i className="fas fa-plus-circle" aria-hidden="true"></i>
-              </button>
-              &nbsp;
+              {
+                this.props.order.numPhotos > this.state.allPhotos.length &&
+                <>
+                  <button className='btn btn-primary btn-sm' onClick={this.toggleAddPhoto}>
+                    添加&nbsp;
+                    <i className="fas fa-plus-circle" aria-hidden="true"></i>
+                  </button>
+                  &nbsp;
+                </>
+              }
               <button className='btn btn-secondary btn-sm' onClick={this.deletePhotos}>
               删除&nbsp;
               <i className="fas fa-minus-circle"></i>

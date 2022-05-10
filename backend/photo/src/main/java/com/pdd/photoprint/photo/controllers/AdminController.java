@@ -3,6 +3,7 @@ package com.pdd.photoprint.photo.controllers;
 import ch.qos.logback.classic.net.SyslogAppender;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
+import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
 import com.pdd.photoprint.photo.Configs.UserType;
@@ -10,6 +11,7 @@ import com.pdd.photoprint.photo.DTO.AddOrderDTO;
 import com.pdd.photoprint.photo.DTO.ChangePwdDTO;
 import com.pdd.photoprint.photo.DTO.LoginDetails;
 import com.pdd.photoprint.photo.Utils.AccessTokenGenerator;
+import com.pdd.photoprint.photo.Utils.DateHelper;
 import com.pdd.photoprint.photo.Utils.OrderHelper;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
 import com.pdd.photoprint.photo.VO.ResponseUserDetails;
@@ -17,10 +19,13 @@ import com.pdd.photoprint.photo.VO.RestResponse;
 import com.pdd.photoprint.photo.mapper.PostAddrMapper;
 import com.pdd.photoprint.photo.mapper.UserAccessTokenMapper;
 import com.pdd.photoprint.photo.mapper.UserMapper;
+import com.pdd.photoprint.photo.model.Orders;
 import com.pdd.photoprint.photo.model.UserDO;
 import com.pdd.photoprint.photo.model.Users;
 import com.pdd.photoprint.photo.services.OrderService;
+import com.pdd.photoprint.photo.services.PictureService;
 import org.apache.catalina.User;
+import org.apache.catalina.valves.JDBCAccessLogValve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -31,9 +36,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
@@ -53,6 +60,8 @@ public class AdminController {
     Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     private OrderService orderService;
+
+    private PictureService pictureService;
 
     @Autowired
     public void setUserMapper(UserMapper userMapper) {
@@ -77,6 +86,11 @@ public class AdminController {
     @Autowired
     public void setOrderService(OrderService orderService) {
         this.orderService = orderService;
+    }
+
+    @Autowired
+    public void setPictureService(PictureService pictureService) {
+        this.pictureService = pictureService;
     }
 
     @PostMapping("/login")
@@ -334,6 +348,10 @@ public class AdminController {
         List<Integer> orderIds = new ArrayList<>();
         for(PddOrderSummary orderSummary : orderList) {
             orderIds.add(orderSummary.getId());
+            RestResponse response = pictureService.deleteOrderPictures(orderSummary.getPddOrderNumber(), true);
+            if(!response.checkResponse()) {
+                return response;
+            }
         }
 
         orderService.getOrderMapper().deleteOrders(orderIds);
@@ -357,7 +375,51 @@ public class AdminController {
         return response;
     }
 
+    @PutMapping("/order/{orderNumber}/status/{status}")
+    public RestResponse editOrderStatus(@PathVariable(name = "orderNumber") String orderNumber, @PathVariable(name = "status") OrderStatus status) {
+        RestResponse response = new RestResponse();
+        QueryWrapper<Orders> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Orders::getPddOrderNumber, orderNumber);
 
+        Orders order = this.orderService.getOrderMapper().selectOne(queryWrapper);
+        if(order == null) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("订单不存在");
+            return response;
+        }
+
+        order.setStatus(status.getValue());
+        this.orderService.getOrderMapper().updateById(order);
+
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setMessage("成功");
+        return response;
+    }
+
+    @PutMapping("/order/status/multiple")
+    public RestResponse editOrderStatusMultiple(@RequestBody List<Orders> orders) {
+        RestResponse response = new RestResponse();
+        List<Integer> orderIds = orders.stream().map(item -> item.getId()).collect(Collectors.toList());
+        List<Orders> dbOrders = this.orderService.getOrderMapper().queryOrdersInList(orderIds);
+        dbOrders.forEach(item -> {
+            Orders order = orders.stream().filter(tempOrder -> Objects.equals(tempOrder.getId(), item.getId())).findFirst().get();
+            if(order != null && order.getStatus() == OrderStatus.FINISH.getValue()) {
+                item.setDateComplete(new Date()); // 填写结束时间
+            }
+            item.setStatus(order.getStatus());
+        });
+
+        boolean success = this.orderService.updateBatchById(dbOrders);
+        if(success) {
+            response.setStatus(RestRepStatus.SUCCESS.name());
+            response.setMessage("成功");
+            return response;
+        }
+
+        response.setStatus(RestRepStatus.ERROR.name());
+        response.setError("修改状态失败");
+        return response;
+    }
 
 
     @GetMapping("/queryOrder")
@@ -374,6 +436,34 @@ public class AdminController {
         }
 
         response.setError("订单信息不存在!");
+        return response;
+    }
+
+
+    @PostMapping("/checkFinishedOrders")
+    RestResponse invalidateFinishedOrders() {
+        RestResponse response = new RestResponse();
+
+        QueryWrapper<Orders> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Orders::getStatus, OrderStatus.FINISH.getValue());
+
+        List<Orders> orders = orderService.getOrderMapper().selectList(queryWrapper);
+        for(Orders order : orders) {
+
+            if(order.getDateComplete() != null) {
+                long diff = new Date().getTime() - order.getDateComplete().getTime();
+                long days = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+                if(days > 7) {
+                    order.setStatus(OrderStatus.INVALID.getValue());
+                    order.setDateDelete(new Date());
+
+                    orderService.getOrderMapper().updateById(order);
+                }
+            }
+        }
+
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        response.setMessage("成功");
         return response;
     }
 }

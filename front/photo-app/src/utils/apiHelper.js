@@ -40,11 +40,10 @@ export function apiGet(url, params = {}) {
     return get(url, params1);
 }
 
-export function apiPut(url, params = {}) {
+export function apiPut(url, params = {}, data = {}) {
     let authHeaders = getAuthenticationHeaders()
-
     let params1 = {...params, ...authHeaders}
-    return put(url, params1);
+    return put(url, params1, data);
 }
 
 export function apiPost(url, data = {}, params = {}) {
@@ -70,6 +69,24 @@ export async function queryPhotos(pddOrderNumber) {
 export async function updatePhotoStatus(pddOrderNumber, photoId, status) {
     const url = `/orders/${pddOrderNumber}/photos/${photoId}/editStatus/${status}`
     const response = await apiPut(url)
+    return response;
+}
+
+export async function updateOrderStatus(pddOrderNumber, status) {
+    const url = `/admin/order/${pddOrderNumber}/status/${status}`
+    const response = await apiPut(url);
+    return response;
+}
+
+export async function updateOrderStatusMultiple(orders) {
+    const url = `/admin/order/status/multiple`
+    const response = await apiPut(url, {}, orders);
+    return response;
+}
+
+export async function checkFinishedOrders() {
+    const url = `/admin/checkFinishedOrders`;
+    const response = await apiPost(url);
     return response;
 }
 
@@ -208,6 +225,7 @@ export async function customerQueryOrder(orderNumber) {
     return response;
 }
 
+
 export async function customerAddOrder(data) {
     const url = `/pdd/order/add`
     const result = await post(url, data);
@@ -218,6 +236,11 @@ export async function customerEditOrder(data) {
     const url = `/pdd/order/edit`
     const result = await apiPost(url, data);
     return result;
+}
+
+export async function adminQueryOrder(orderNumber) {
+    let response = await apiGet("/admin/queryOrder", {order_number: orderNumber})
+    return response
 }
 
 export async function addminAddOrder(data) {
@@ -241,6 +264,7 @@ export async function deleteOrders(data) {
 export async function deleteSelectedPhotos(pddOrderNumber, photoIds) {
     const url = `/orders/${pddOrderNumber}/photos/deleteMultiple`
     const result = await apiDelete(url, photoIds)
+    return result;
 }
 
 export function ifLoggedIn() {

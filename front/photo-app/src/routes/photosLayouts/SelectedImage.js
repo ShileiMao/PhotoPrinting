@@ -75,7 +75,7 @@ const SelectedImage = ({
   }, [selected]);
 
 
-  console.log("photo status: " + JSON.stringify(photo))
+
   return (
     <div
       style={{ margin, height: photo.height, width: photo.width, ...cont }}

@@ -21,6 +21,23 @@
         <result column="phone_number" property="phoneNumber" />
     </resultMap>
 
+
+    <resultMap id="OrderResultMap" type="com.pdd.photoprint.photo.model.Orders">
+        <id column="id" property="id"/>
+        <result column="pdd_order_number" property="pddOrderNumber"/>
+        <result column="date_create" property="dateCreate"/>
+        <result column="date_complete" property="dateComplete"/>
+        <result column="date_delete" property="dateDelete"/>
+        <result column="post_addr" property="postAddr"/>
+        <result column="status" property="status"/>
+        <result column="num_photos" property="numPhotos"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="photo_size" property="photoSize" />
+        <result column="packaging" property="packaging" />
+        <result column="phone_number" property="phoneNumber" />
+    </resultMap>
+
     <select id="queryOrderByNumber" resultMap="BaseResultMap">
         select orders.*,
                post_addr.address, post_addr.addr_details
@@ -103,4 +120,15 @@
             #{item}
         </foreach>
     </delete>
+
+    <select id="queryOrdersInList" resultMap="OrderResultMap">
+        select orders.*,
+               post_addr.address, post_addr.addr_details
+        from orders join post_addr on orders.post_addr = post_addr.id
+        where orders.id in
+        <foreach item="item" index="index" collection="orderIds"
+                 open="(" separator="," close=")" nullable="true">
+            #{item}
+        </foreach>
+    </select>
 </mapper>

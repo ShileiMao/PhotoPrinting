@@ -46,6 +46,29 @@ public class PictureService {
         this.storageService = storageService;
     }
 
+    public RestResponse deleteOrderPictures(String orderNumber, boolean force) {
+        RestResponse response = new RestResponse();
+        PddOrderSummary orderSummary = orderMapper.queryOrderByNumber(orderNumber);
+
+        QueryWrapper<OrderPicture> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(OrderPicture::getOrderId, orderSummary.getId());
+        List<OrderPicture> orderPictures = orderPictureMapper.selectList(queryWrapper);
+
+        if((orderPictures == null || orderPictures.isEmpty()) && !force) {
+            response.setStatus(RestRepStatus.ERROR.name());
+            response.setError("照片不存在");
+            return response;
+        }
+        orderPictureMapper.delete(queryWrapper);
+
+        for(OrderPicture orderPicture : orderPictures) {
+            response = deletePicture(orderPicture.getPictureId());
+        }
+
+        response.setStatus(RestRepStatus.SUCCESS.name());
+        return response;
+    }
+
     public RestResponse deletOrderPicture(Integer id, String orderNumber) {
         RestResponse response = new RestResponse();
 

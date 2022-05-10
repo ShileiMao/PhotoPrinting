@@ -7,6 +7,7 @@ import com.pdd.photoprint.photo.VO.PddOrderSummary;
 import com.pdd.photoprint.photo.mapper.OrderMapper;
 import com.pdd.photoprint.photo.model.Orders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -38,4 +39,6 @@ public class OrderService extends ServiceImpl<OrderMapper, Orders> {
         List<PddOrderSummary> orderSummaryList = orderMapper.queryOrderPage(orderStatus, orderBy, desc, searchText, startDate, endDate);
         return PageInfo.of(orderSummaryList);
     }
+
+
 }

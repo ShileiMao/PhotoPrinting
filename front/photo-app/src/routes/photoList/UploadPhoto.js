@@ -3,6 +3,7 @@ import ImageUploading from 'react-images-uploading'
 import Config from '../../config/webConf'
 import { uploadImage } from '../../utils/fileUploader'
 import myLogger from '../../utils/logger'
+import { StringUtils } from '../../utils/StringUtils'
 import ToastHelper from '../../utils/toastHelper'
 
 export default class UploadPhoto extends Component {
@@ -41,10 +42,28 @@ export default class UploadPhoto extends Component {
   async uploadAll() {
     console.log("upload all")
     let url = `/files/uploadMultiple` 
+
+    let checkRepeat = {}
+    let hasRepeat = false;
+    let repeatName = "";
+
     let files = this.state.images.map( (item, index) => {
+      const fileName = checkRepeat[item.file.name];
+      if(!StringUtils.isEmpty(fileName)) {
+        hasRepeat = true;
+        repeatName = item.file.name; 
+      }
+
+      checkRepeat[item.file.name] = item.file.name;
+
       myLogger.debug("item: " + JSON.stringify(item.file));
       return item.file;
     });
+
+    if(hasRepeat) {
+      ToastHelper.showError("文件重复")
+      return;
+    }
     
     const response = await uploadImage(files, url, this.props.orderNumber);
     if(response.status.toLowerCase() !== 'success') {
@@ -59,7 +78,7 @@ export default class UploadPhoto extends Component {
   }
 
   render() {
-    const MAX_FILE_SIZE = 1024 * 1024 * 6
+    const MAX_FILE_SIZE = 1024 * 1024 * 5
     const imageFiles = [];
     const maxNumber = 10;
     
@@ -86,7 +105,7 @@ export default class UploadPhoto extends Component {
           }) => (
             // write your building UI
             <div className="card border-secondary mb-3" >
-              <div className="card-header">上传照片</div>
+              <div className="card-header">上传照片（支持.jpg, png格式）</div>
               <div className="card-body">
                   <button
                   className='btn btn-secondary btn-sm'
@@ -94,7 +113,7 @@ export default class UploadPhoto extends Component {
                   onClick={onImageUpload}
                   {...dragProps}
                 >
-                  上 传
+                  选择
                 </button>
                 &nbsp;
                 {
@@ -107,9 +126,16 @@ export default class UploadPhoto extends Component {
                 <div className='upload-container'>
                   {
                     imageList.map((image, index) => (
-                      <div key={index} className="image-item">
-                        <img src={image['data_url']} alt="" width="100" />
+                      <div key={index} className="image-item" style={{height: `100px`}}>
+                        <img src={image['data_url']} alt="" width="120" />
+                        {
+                            image.file.size > MAX_FILE_SIZE && 
+                            <div className='img-item-warning-text'>
+                              <span>文件太大，无法上传，最大支持5M</span>
+                            </div>
+                        }
                         <div className="image-item__btn-wrapper">
+                          
                           <button className='btn btn-secondary btn-sm' onClick={() => onImageUpdate(index)}>修改</button>
                           <button className='btn btn-secondary btn-sm' onClick={() => onImageRemove(index)}>删除</button>
                         </div>
