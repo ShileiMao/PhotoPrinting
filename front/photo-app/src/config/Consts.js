@@ -311,6 +311,24 @@ export const PhotoPrintStatus = [
   },
 ]
 
+export const PhotoPrintStatusHash = {
+  NEW: {
+    value: `NEW`,
+    dbValue: 0,
+    text: '新创建'
+  },
+  PRINTED: {
+    value: `PRINTED`,
+    dbValue: 1,
+    text: '已打印'
+  },
+  PRINT_FAIL: {
+    value: `PRINT_FAIL`,
+    dbValue: 3,
+    text: '打印失败'
+  },
+}
+
 export const parsePhotoPrintStatusDbValue = (dbValue) => {
   switch(dbValue) {
     case 0:

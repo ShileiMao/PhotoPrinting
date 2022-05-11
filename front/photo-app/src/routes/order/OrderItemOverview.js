@@ -7,6 +7,7 @@ import { deleteSelectedPhotos, queryPhotos } from '../../utils/apiHelper'
 import Config from '../../config/webConf'
 import ToastHelper from '../../utils/toastHelper'
 import OrderOverView from '../../Components/OrderOverView'
+import { OrderStatusHash, PhotoPrintStatus, PhotoPrintStatusHash } from '../../config/Consts'
 
 
 export default class OrderItemOverview extends Component {
@@ -72,6 +73,20 @@ export default class OrderItemOverview extends Component {
 
     if(selectedPhotos.length === 0) {
       ToastHelper.showWarning("请选择要删除的照片");
+      return;
+    }
+
+    if(this.props.order.status >= OrderStatusHash.PRINTED.dbValue) {
+      ToastHelper.showWarning("订单已打印，不可修改");
+      return;
+    }
+
+    const printedPhoto = selectedPhotos.filter(item => {
+      return item.status === PhotoPrintStatusHash.PRINTED.dbValue
+    });
+    
+    if(printedPhoto.length > 0) {
+      ToastHelper.showWarning("照片已打印，不可修改");
       return;
     }
 
