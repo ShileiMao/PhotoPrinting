@@ -1,4 +1,4 @@
-http://39.105.223.206
+http://39.105.223.206:  Adm1n!23*
 1. filezila：ftptest, Admin!23
 2. ftp root: /var/ftp/test
 3. tomcat site: /data/wwwroot/default
