@@ -10,7 +10,7 @@ import { withRouter } from '../../utils/react-router';
 import ic_print from '../../imgs/ic_print.svg'
 import OrderOverView from '../../Components/OrderOverView';
 import { Dialog } from '../../Components/Dialog';
-import { findOptionForDbValue, OrderStatus, PhotoPrintStatus } from '../../config/Consts';
+import { findOptionForDbValue, OrderStatus, OrderStatusHash, PhotoPrintStatus } from '../../config/Consts';
 import { Toast, ToastHeader } from 'react-bootstrap';
 import ToastHelper from '../../utils/toastHelper';
 
@@ -265,7 +265,7 @@ class AdminOrderDetails extends Component {
 
     if(unprintedPhoto.length === 0 && printedPhoto.length >= this.state.order.numPhotos) {
       console.log("all printed")
-      const printedState = findOptionForDbValue(OrderStatus, 1);
+      const printedState = OrderStatusHash.PRINTED;
       const result = await updateOrderStatus(this.state.orderNumber, printedState.value);
     } else {
       console.log("not all printed")
