@@ -1,0 +1,7 @@
+ 1. pm2 serve build 80 --spa 
+ 2. backend port 8080
+ 3. deploy to /data/www/default/photo.war
+ 4. logs: /usr/local/tomcat/bin/logs 
+ 5. images: /usr/local/tomcat/bin/upload-dir
+ 6. root password: R007~!_e@#
+ 7. remote address: 39.105.223.206

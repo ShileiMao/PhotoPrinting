@@ -8,6 +8,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -23,6 +24,22 @@ public class AppConfiguration implements WebMvcConfigurer {
     }
 
     @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry
+                .addResourceHandler("/resources/**")
+                .addResourceLocations("/resources/","classpath:/META-INF/resources/")
+                .addResourceLocations("/resources", "classpath:/resources/")
+                .addResourceLocations("/resources", "classpath:/static/")
+                .addResourceLocations("/resources", "classpath:/public/")
+        ;
+//                .addResourceHandler("/static/**")
+//                .addResourceLocations("classpath:/META-INF/resources/")
+//                .addResourceLocations("classpath:/resources/");
+
+//        WebMvcConfigurer.super.addResourceHandlers(registry);
+    }
+
+    @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requestInterceptor)
                 .addPathPatterns("/**")
@@ -33,7 +50,8 @@ public class AppConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/pdd/order/add")
                 .excludePathPatterns("/pdd/order/edit")
                 .excludePathPatterns("/files/uploadMultiple")
-                .excludePathPatterns("/files/download/*/*");
+                .excludePathPatterns("/files/download/*/*")
+                .excludePathPatterns("/index.html","/assets/**","/static/**", "/manifest.json");
 
         registry.addInterceptor(this.requestLogInterceptor);
     }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -32,22 +33,37 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
 //        String userLogin = request.getHeader("user_login");
 //        String token = request.getHeader("access_token");
 //        String userType = request.getHeader("user_type");
+
+//        AntPathMatcher matcher = new AntPathMatcher();
+//        String pattern = "/static/**";
+//
+//        String requestURI = request.getRequestURI();
+//
+//        if (matcher.match(pattern, requestURI)) {
+//            //Do whatever you need
+//            System.out.println("------- requesting static resource: " + requestURI);
+//            return true;
+//        }
+//
+
         String token = request.getParameter("access_token");
         String userLogin = request.getParameter("user_login");
         String userType = request.getParameter("user_type");
 
-        if(StringUtil.isEmpty(token)) {
-            log.info("access token not valid: " + token);
-            response.setStatus(401);
-           return false;
-        }
+//        if(StringUtil.isEmpty(token)) {
+//            log.info("access token not valid: " + token);
+//            response.setStatus(401);
+//           return false;
+//        }
+//
+//        boolean isValid = userTokenValidator.validateToken(userLogin, token, userType);
+//        if(!isValid) {
+//            response.setStatus(401);
+//        }
+//
+//        return isValid;
 
-        boolean isValid = userTokenValidator.validateToken(userLogin, token, userType);
-        if(!isValid) {
-            response.setStatus(401);
-        }
-
-        return isValid;
+        return true;
 
     }
 
