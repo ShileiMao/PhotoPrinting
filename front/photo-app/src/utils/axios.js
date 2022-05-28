@@ -17,11 +17,18 @@ const config = {
   },
   handleError: (res) => {
     if(res.status === 401) {
-      ToastHelper.showError("请登录！", () => {
-        window.location = "/admin"
+      ToastHelper.showError("服务器响应错误", () => {
+        if(res.config.url !== undefined && res.config.url.startsWith('/pdd')) {
+          window.location = ''
+        } else {
+          window.location = "/admin"
+        }
       });
       setTimeout(() => {
-        window.location = "/admin"
+        if(res.config.url !== undefined && res.config.url.startsWith('/pdd')) {
+        } else {
+          window.location = "/admin"
+        }
       }, 500);
     }
     //  else {

@@ -97,9 +97,13 @@ export default function AdminOrderFrom({isEditing, preFillData, editOrderApi, ad
 
         <div className="col-4 mb-3">
           <label className='form-label'>照片数量：</label>
-          <input className="form-control" {...register("numPhotos", {required: true, defaultValue: 10, min: 10})} required/>
+          <input className="form-control" {...register("numPhotos", {required: true, defaultValue: 10, min: 10, pattern: {
+            value: /^\d+$/,
+            message: "请输入正确的数字"
+          }})} required/>
           <p className="invalid-feedback" style={{display: `block`}}>
             {errors.numPhotos?.type === 'required' && "请输入张数"}
+            {errors.numPhotos?.type === 'pattern' && "请输入打印张数（数字）"}
           </p>
         </div>
 
