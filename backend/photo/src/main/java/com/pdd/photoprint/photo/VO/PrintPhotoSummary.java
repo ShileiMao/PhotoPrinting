@@ -22,6 +22,8 @@ public class PrintPhotoSummary {
     @TableField("src")
     String src;
 
+    String thumbnail;
+
     @TableField("copies")
     Integer copies;
 

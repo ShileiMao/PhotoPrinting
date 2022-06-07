@@ -28,9 +28,9 @@ export const Orderlist = () => {
 
         myLogger.debug("orderSummary: " + JSON.stringify(response.data));
 
-        storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.data.accessToken);
-        storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
-        storeToken(TOKEN_KEYS.USER_LOGIN, response.data.pddOrderNumber);
+        // storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.data.accessToken);
+        // storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
+        // storeToken(TOKEN_KEYS.USER_LOGIN, response.data.pddOrderNumber);
         setQueryOrderFailed(false);
         return;
       }

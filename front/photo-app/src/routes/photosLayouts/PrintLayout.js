@@ -110,6 +110,8 @@ export const PrintLayout = React.forwardRef((props, ref) => {
 
   const allPhotos2 = allPhotos || allPhotos1 || []
 
+  console.log("all photos2; " + JSON.stringify(allPhotos2))
+
   const getClassName = (element,index) => {
     const isLandscape = element.width > element.height;
     let className = "photo-pic"
@@ -124,13 +126,20 @@ export const PrintLayout = React.forwardRef((props, ref) => {
 
   return (
     <div ref={ref} className="print-container">
-      <canvas id="myCanvas" width="200" height="100" style={{display: `none`}} />
+      {/* <canvas id="myCanvas" width="200" height="100" style={{display: `none`}} /> */}
       {
         allPhotos2.map((element, index) => {
           return(
+            index % 2 == 0 ?
           <div className='page photo-container' key={index}>
             <img className={getClassName(element, index)} src={element.src} />
-          </div>);
+          </div> 
+          :
+          
+          <div className='page_1 photo-container' key={index}>
+            <img className={getClassName(element, index)} src={element.src} />
+          </div>
+          );
         })
       }
       {/* <Gallery photos={allPhotos} renderImage={imageRenderer} /> */}

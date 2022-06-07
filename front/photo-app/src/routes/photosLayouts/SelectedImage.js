@@ -50,7 +50,8 @@ const SelectedImage = ({
   top,
   left,
   selected,
-  appendSelected
+  appendSelected,
+  showStatus = false 
 }) => {
   const [isSelected, setIsSelected] = useState(selected);
   //calculate x,y scale
@@ -91,7 +92,7 @@ const SelectedImage = ({
         onClick={handleOnClick}
       />
       {
-        photo.status === 1 &&
+        photo.status === 1 && showStatus &&
         <div className="text-block"> 
           <p>已打印</p>
         </div>

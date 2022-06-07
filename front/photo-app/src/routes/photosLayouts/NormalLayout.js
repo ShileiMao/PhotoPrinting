@@ -14,6 +14,8 @@ const NormalLayout = (props) => {
     }
   })
 
+  console.log("images: " + JSON.stringify(allPhotos))
+
   const appendSelected = props.appendSelected || (() => {})
 
 
@@ -28,6 +30,7 @@ const NormalLayout = (props) => {
         left={left}
         top={top}
         appendSelected={appendSelected}
+        showStatus={props.showStatus || false}
       />
     ),
     [props.selectAll]

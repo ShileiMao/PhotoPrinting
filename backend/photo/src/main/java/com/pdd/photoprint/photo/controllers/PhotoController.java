@@ -50,7 +50,6 @@ public class PhotoController {
     public RestResponse getOrderPhotos(@PathVariable String orderNumber) {
         RestResponse response = new RestResponse();
 
-
         OrderHelper orderHelper =  new OrderHelper(orderMapper, postAddrMapper);
         response = orderHelper.basicOrderInfoVerify(orderNumber);
         if(response.getStatus().equals(RestRepStatus.ERROR.name())) {

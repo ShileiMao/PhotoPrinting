@@ -34,7 +34,8 @@ export const OrderRow = ({props, order, toggleCheck}) => {
   return (
     <tr>
         <td><input type="checkbox" className='form-check-input' checked={order.checked || false} onChange={handleClick} /></td>
-        <td>{order.id}</td>
+        {/* <td style={{dispay: `none`}}>{order.id}</td> */}
+        <td>{order.pddOrderNumber}</td>
         <td>{order.title}</td>
         <td>{order.description}</td>
         <td>{order.numPhotos}</td>

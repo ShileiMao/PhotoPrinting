@@ -19,7 +19,7 @@ $paddingLeft: 2cm;
 
 @media screen {
   .print-container {
-    display: none;
+    /* display: none; */
   }
 
   p.bodyText {font-family:verdana, arial, sans-serif;}
@@ -37,7 +37,20 @@ $paddingLeft: 2cm;
     box-shadow: initial;
     background: initial;
     page-break-after: always;
-    
+    background-color:blueviolet;
+    height: 100vh;
+  }
+
+  .page_1 {
+    size: var(--print-size);
+    margin: 0;
+    padding: 0;
+    border: initial;
+    border-radius: initial;
+    box-shadow: initial;
+    background: initial;
+    page-break-after: always;
+    background-color:antiquewhite;
     height: 100vh;
   }
 
@@ -70,13 +83,24 @@ $paddingLeft: 2cm;
 
 
 @page {
-  size: var(--print-size);
+  size: var(--print-size) ;
   /* display: flex;
   align-items: stretch; */
   
   padding: 0;
+  orientation: portrait;
   
   /* // margin: $paddingTop $paddingLeft $paddingTop $paddingLeft; */
+
+
+  /* size: var(--print-size);
+  border: initial;
+  border-radius: initial;
+  box-shadow: initial;
+  background: initial;
+  page-break-after: always;
+  
+  height: 100vh; */
 }
 
 @media all {
@@ -90,18 +114,42 @@ $paddingLeft: 2cm;
     display: none;
   }
 
+  .print-container {
+    /* display: none; */
+  }
+
+  p.bodyText {font-family:verdana, arial, sans-serif;}
+
+  .pagebreak {
+    display: none;
+  }
+
   .page {
+    size: var(--print-size);
+    margin: 0;
+    padding: 0;
     border: initial;
     border-radius: initial;
     box-shadow: initial;
     background: initial;
     page-break-after: always;
-    
+    background-color:blueviolet;
     height: 100vh;
+    max-width: 100%;
   }
 
-  .even-bg {
-    background-color: red;
+  .page_1 {
+    size: var(--print-size);
+    margin: 0;
+    padding: 0;
+    border: initial;
+    border-radius: initial;
+    box-shadow: initial;
+    background: initial;
+    page-break-after: always;
+    background-color:antiquewhite;
+    height: 100vh;
+    max-width: 100%;
   }
 
   .photo-container {
@@ -128,6 +176,5 @@ $paddingLeft: 2cm;
     max-width: 100vh;
     max-height: 100vw;
     transform: translatex(calc(50vw - 50%)) rotate(90deg);
-  
   }
 }

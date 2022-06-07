@@ -1,4 +1,4 @@
-import { apiPost } from './apiHelper'
+import { post } from './axios';
 
 export async function uploadImage(images, url, orderNumber) {
   const formData = new FormData();
@@ -12,5 +12,5 @@ export async function uploadImage(images, url, orderNumber) {
     }
   }
   
-  return await apiPost(url, formData, config)
+  return await post(url, formData, config)
 }

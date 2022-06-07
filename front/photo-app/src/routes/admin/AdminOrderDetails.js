@@ -10,9 +10,10 @@ import { withRouter } from '../../utils/react-router';
 import ic_print from '../../imgs/ic_print.svg'
 import OrderOverView from '../../Components/OrderOverView';
 import { Dialog } from '../../Components/Dialog';
-import { findOptionForDbValue, OrderStatus, OrderStatusHash, PhotoPrintStatus } from '../../config/Consts';
+import { findOptionForDbValue, getPhotoPrintSize, OrderStatus, OrderStatusHash, PhotoPaperSize, PhotoPrintStatus, PhotoSize, PhotoSizePrint } from '../../config/Consts';
 import { Toast, ToastHeader } from 'react-bootstrap';
 import ToastHelper from '../../utils/toastHelper';
+import { createPdf } from '../../utils/pdfWriter';
 
 class AdminOrderDetails extends Component {
   constructor(props) {
@@ -20,14 +21,18 @@ class AdminOrderDetails extends Component {
       this.state = {
           order: null,
           allPhotos: [],
+          previewPhotos: [],
           photoToPrint: [],
           selectAll: false,
           orderNumber: this.props.match.params.orderNum,
           showAlert: false,
           alertTitle: "",
           alertText: "",
+          customAlertContent: null,
           alertCancelCallback: null,
-          alertConfirmCallback: null
+          alertConfirmCallback: null,
+          downloadingImgs: false,
+          paperSize: PhotoPaperSize.R3,
       }
       // const orderNumber = this.props.match.params.orderNum;
 
@@ -43,6 +48,7 @@ class AdminOrderDetails extends Component {
       this.showDeleteConfirm = this.showDeleteConfirm.bind(this);
       this.toggleSelectAll = this.toggleSelectAll.bind(this);
       this.hasSelectedPhoto = this.hasSelectedPhoto.bind(this);
+      this.showPrintConfirm = this.showPrintConfirm.bind(this);
   }
   
   async refreshPhotoList() {
@@ -51,7 +57,7 @@ class AdminOrderDetails extends Component {
         console.log("error loading order: " + result.error);
         return;
     }
-    console.log("order: " + JSON.stringify(result.data));
+    // console.log("order: " + JSON.stringify(result.data));
     this.setState({
         order: result.data[0]
     })
@@ -63,14 +69,30 @@ class AdminOrderDetails extends Component {
       return
     }
 
+    // console.log("query images: " + JSON.stringify(response.data))
+
     let photoList = response.data.map(item => {
       let object = {...item};
-      object.src = Config.BASE_URL + item.src
+      if(item.thumbnail != null && item.thumbnail != undefined) {
+        object.thumbnail = Config.BASE_URL + item.thumbnail;
+      }
+      
+      object.src = Config.BASE_URL + item.src;
+      
+      return object;
+    })
+
+    let previewPhotos = photoList.map(item => {
+      let object = {...item}
+      if(item.thumbnail != null && item.thumbnail != undefined) {
+        object.src = item.thumbnail;
+      } 
       return object;
     })
 
     this.setState({
-      allPhotos: photoList
+      allPhotos: photoList,
+      previewPhotos: previewPhotos
     }, () => {
       this.maintainOrderStatus()
     })
@@ -140,26 +162,109 @@ class AdminOrderDetails extends Component {
     return pageStyle;
   }
 
+  showPrintConfirm() {
+    const printConfirmCallback = async () => {
+      this.setState({
+        customAlertContent: null
+      }, () => {
+        const photoSize = findOptionForDbValue(PhotoSize, this.state.order.photoSize);
+        const photoPrintSize = getPhotoPrintSize(photoSize)
+
+        if(this.state.paperSize.height < photoPrintSize.height || this.state.paperSize.width < photoPrintSize.width) {
+          this.setState({
+            showAlert: true,
+            alertTitle: "错误提示",
+            alertText: "纸张尺寸太小，请重新选择",
+            alertCancelCallback: null,
+            alertConfirmCallback: null
+          })
+
+          return;
+        }
+
+        this.downloadPrintintImages()
+        this.maintainOrderStatus();
+      })
+      
+      // this.refreshPhotoList()
+    }
+
+    const printCancelCallback = () => {
+      this.setState({
+        customAlertContent: null
+      })
+    }
+
+    const paperSelected = (e) => {
+      console.log("paper selected: " + JSON.parse(e.target.value))
+      this.setState({paperSize: JSON.parse(e.target.value)})
+    }
+
+    const alertContent = () => {
+      return (
+        <>
+          <label htmlFor="paper-size">打印纸尺寸</label>
+          <select id='paper-size' className="form-control" onChange={paperSelected} value="R3">
+            {
+              Object.entries(PhotoPaperSize).map(([key, value]) => {
+                return (
+                  <option key={value.name} value={JSON.stringify(value)}>{value.desc}</option>
+                )
+              })
+            }
+          </select>
+        </>
+      )
+    }
+
+    // console.log("photo print finished: " + );
+    this.setState({
+      showAlert: true,
+      alertTitle: "请确认打印纸型号",
+      customAlertContent: alertContent,
+      alertCancelCallback: printCancelCallback,
+      alertConfirmCallback: printConfirmCallback
+    })
+  }
+
   async downloadPrintintImages() {
     const selectedPhotos = this.state.allPhotos.filter(photo => {
       return photo.isSelected === true;
     });
-
-    const array = selectedPhotos.filter(item => {
-      return item.isSelected === true;
-    })
-    /*
-    const array = await Promise.all(selectedPhotos.map(async (element) => {
-      const imageURL = element.src;
-      const imageData = await toDataURL(imageURL);
-      console.log("image data: " + imageData);
-
-      return imageData;
-    }));
-    */
+    
     this.setState({
-      photoToPrint: array
+      // photoToPrint: array
+      downloadingImgs: true
+    }, async () => {
+
+      const downloadedImgs = await Promise.all(selectedPhotos.map(async (element) => {
+        const imageURL = element.src;
+        const imageData = await toDataURL(imageURL);
+        // console.log("image data: " + imageData);
+        // return {
+        //   ... element,
+        //   src: imageData
+        // }
+        console.log("image data: --- url: " + imageURL)
+        return {
+          ... element,
+          imageData: imageData
+        }
+      }));
+
+      const photoSize = findOptionForDbValue(PhotoSize, this.state.order.photoSize);
+      const photoPrintSize = getPhotoPrintSize(photoSize)
+
+  
+      await createPdf({pddOrderNumber: this.state.orderNumber, description: this.state.order.description || this.state.phoneNumber}, 
+        this.state.paperSize, photoPrintSize, downloadedImgs)
+
+      this.setState({
+        downloadingImgs: false,
+        photoToPrint: downloadedImgs
+      }, this.photoPrintFinished)
     });
+
     console.log("photo print finished: " );
   }
 
@@ -187,7 +292,6 @@ class AdminOrderDetails extends Component {
 
   
   async showDeleteConfirm() {
-    
     const selected = this.state.allPhotos.filter(item => {
       return item.isSelected === true
     })
@@ -239,7 +343,12 @@ class AdminOrderDetails extends Component {
 
   getAlertContent() {
     return(<>
-      {this.state.alertText}
+      {
+        this.state.customAlertContent !== null ?
+        this.state.customAlertContent() 
+        :
+        this.state.alertText
+      }
     </>)
   }
 
@@ -281,15 +390,15 @@ class AdminOrderDetails extends Component {
               <OrderOverView order={this.state.order} photoCount={this.state.allPhotos.length} />
 
               <div className='preview-container'>
-                <NormalLayout images={this.state.allPhotos} selectAll={this.state.selectAll} appendSelected={this.appendSelected}/>
+                <NormalLayout images={this.state.previewPhotos} selectAll={this.state.selectAll} appendSelected={this.appendSelected} showStatus={true}/>
               </div>
 
-              <div>
+              {/* <div>
                   <PrintLayout images={this.state.photoToPrint} 
                   selectAll={this.state.selectAll} 
                   appendSelected={this.appendSelected} 
                   ref={el => (this.componentRef = el)}/>
-              </div>
+              </div> */}
               {
                 this.state.showAlert &&
                 <Dialog show={this.state.showAlert} 
@@ -318,13 +427,14 @@ class AdminOrderDetails extends Component {
                     {
                       this.hasSelectedPhoto() &&
                       <>
-                        <ReactToPrint
+                      <button className='btn btn-primary btn-sm' onClick={this.showPrintConfirm} >打印</button>
+                        {/* <ReactToPrint
                           trigger={() => { return <button className='btn btn-primary btn-sm' onClick={this.showDeleteConfirm}>打印</button>}}
                           content={() => this.componentRef}
                           onBeforeGetContent={this.downloadPrintintImages}
                           onAfterPrint={this.photoPrintFinished}
                         >
-                        </ReactToPrint>
+                        </ReactToPrint> */}
                         &nbsp;
                       </>
                     }
@@ -338,6 +448,14 @@ class AdminOrderDetails extends Component {
                    </button>
                 }
               </div>
+          </div>
+        }
+
+        {
+          this.state.downloadingImgs &&
+          <div className="text-center p-3">
+            <span className="spinner-border spinner-border-sm align-center"></span>
+            <span className="sr-only">下载中...</span>
           </div>
         }
 

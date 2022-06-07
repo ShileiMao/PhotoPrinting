@@ -13,12 +13,15 @@
         <result column="name" property="picName"/>
         <result column="width" property="width"/>
         <result column="height" property="height" />
+        <result column="thumbnail" property="thumbnail" />
     </resultMap>
 
     <select id="queryPicturesOfOrder" resultMap="BaseResultMap">
         select orders.pdd_order_number,
                order_picture.picture_id, order_picture.copies, order_picture.size, order_picture.status,
-               concat(#{baseUrl}, concat('/', pictures.location)) as src, pictures.name, pictures.width, pictures.height
+               concat(#{baseUrl}, concat('/', pictures.location)) as src,
+               concat(#{baseUrl}, concat('/', pictures.thumbnail)) as thumbnail,
+               pictures.name, pictures.width, pictures.height
         from order_picture join pictures on order_picture.picture_id = pictures.id
                            join orders on order_picture.order_id = orders.id
         where orders.pdd_order_number = #{orderNumber}

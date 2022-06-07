@@ -7,7 +7,7 @@ import ToastHelper from './toastHelper';
 
 const config = {
   baseURL: webConf.BASE_URL,
-  timeout: 5 * 1000, //   请求超时时间设置
+  timeout: 30 * 1000, //   请求超时时间设置
   crossDomain: true,
   withCredentials: true, // Check cross-site Access-Control
   // 定义可获得的http响应状态码

@@ -25,9 +25,9 @@ export const QueryOrder = () => {
 
     if(response.status.toLowerCase() === 'success') {
       setOrderSummary(response.data);
-      storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.data.accessToken);
-      storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
-      storeToken(TOKEN_KEYS.USER_LOGIN, response.data.pddOrderNumber);
+      // storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.data.accessToken);
+      // storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
+      // storeToken(TOKEN_KEYS.USER_LOGIN, response.data.pddOrderNumber);
       navigate("/order/" + orderNumber); 
 
       return;

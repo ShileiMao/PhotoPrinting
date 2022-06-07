@@ -340,3 +340,110 @@ export const parsePhotoPrintStatusDbValue = (dbValue) => {
       return `PRINT_FAIL`;
   }
 }
+
+
+
+// $pageSize: 3.5in 5in; // 3R
+// $pageSize: 4in 6in; // 4R
+// $pageSize: 5in 7in; // 5R
+// $pageSize: 6in 8in; // 6R
+// $pageSize: 8in 10in; // 8R
+// $pageSize: 10in 12in; // 10R
+
+export const PhotoPaperSize = {
+  R3: {
+    name: '3R',
+    unit: 'cm',
+    width: 8.9,
+    height: 12.7,
+    desc: "3R (8.9 * 12.7 cm)"
+  },
+  R4: {
+    name: '4R',
+    unit: 'cm',
+    width: 10.2,
+    height: 15.2,
+    desc: "4R (10.2 * 15.2 cm)"
+  },
+  R5: {
+    name: '5R',
+    unit: 'cm',
+    width: 12.7,
+    height: 17.8,
+    desc: "5R (12.7 * 17.8 cm)"
+  },
+  R6: {
+    name: '6R',
+    unit: 'cm',
+    width: 15.2,
+    height: 20.3,
+    desc: "6R (15.2 * 20.3 cm)"
+  },
+  R8: {
+    name: '8R',
+    unit: 'cm',
+    width: 20.3,
+    height: 25.4,
+    desc: "8R (15.2 * 20.3 cm)"
+  },
+  R10: {
+    name: '10R',
+    unit: 'cm',
+    width: 25.4,
+    height: 30.5,
+    desc: "10R (25.4 * 30.5 cm)"
+  }
+}
+
+export const PhotoSizePrint = {
+  DEFAULIT: {
+    unit: 'cm',
+    width: 5.08,
+    height: 7.62
+  },
+  THREE_INCH: {
+    unit: 'cm',
+    width: 5.08,
+    height: 7.62
+  },
+  FOUR_INCH: {
+    unit: 'cm',
+    width: 7.6,
+    height: 10.16
+  },
+  FIVE_INCH: {
+    unit: 'cm',
+    width: 8.89,
+    height: 12.7
+  },
+  SIX_INCH: {
+    unit: 'cm',
+    width: 10.16,
+    height: 15.24
+  },
+  SEVEN_INCH: {
+    unit: 'cm',
+    width: 12.7,
+    height: 17.78
+  },
+}
+
+export const getPhotoPrintSize = (photoSize) => {
+  console.log("----")
+  switch(photoSize.dbValue) {
+    case '3inch':
+      return PhotoSizePrint.THREE_INCH
+    case '4inch':
+      return PhotoSizePrint.FOUR_INCH;
+    case '5inch':
+      return PhotoSizePrint.FIVE_INCH
+    case '6inch':
+      return PhotoSizePrint.SEVEN_INCH;
+
+    case '7inch':
+      return PhotoSizePrint.SEVEN_INCH
+    
+    default:
+      return PhotoSizePrint.DEFAULIT
+  }
+}

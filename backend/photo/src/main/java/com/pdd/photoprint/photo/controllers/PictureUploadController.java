@@ -1,7 +1,11 @@
 package com.pdd.photoprint.photo.controllers;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +20,8 @@ import com.pdd.photoprint.photo.Storage.StorageFileNotFoundException;
 import com.pdd.photoprint.photo.Storage.StorageService;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
 import com.pdd.photoprint.photo.VO.RestResponse;
+import com.pdd.photoprint.photo.image.DefaultImgCompressionFmt;
+import com.pdd.photoprint.photo.image.JpgImage;
 import com.pdd.photoprint.photo.mapper.OrderMapper;
 import com.pdd.photoprint.photo.mapper.OrderPictureMapper;
 import com.pdd.photoprint.photo.mapper.PictureMapper;
@@ -189,19 +195,34 @@ public class PictureUploadController {
 
 		int index = 0;
 		for (index = 0; index < paths.length; index ++) {
-			String path = paths[index];
+			String relativePath = paths[index];
 			MultipartFile file = fileList[index];
 
 			try {
 				byte[] bytes = fileList[index].getBytes();
 				Dimension dimension = Imaging.getImageSize(bytes);
 
+				Path rootPath = Paths.get(storageService.getRootDirPath());
+				Path imageFullPath = rootPath.resolve(relativePath);
+				Path thumbnailDirPath = imageFullPath.getParent().resolve("thumbnail");
+				if(Files.notExists(thumbnailDirPath) || !Files.isDirectory(thumbnailDirPath)) {
+					Files.createDirectory(thumbnailDirPath);
+				}
+				Path thumbnailPath = thumbnailDirPath.resolve(imageFullPath.getFileName());
+
+				JpgImage jpgImage = new JpgImage(imageFullPath.toFile(), new DefaultImgCompressionFmt(dimension, bytes.length));
+				jpgImage.compressTo(thumbnailPath.toFile());
+
 				Pictures picture = new Pictures();
 				picture.setName(file.getName());
-				picture.setLocation(path);
+				picture.setLocation(relativePath);
 				picture.setDescription("打印照片");
 				picture.setWidth(dimension.width);
 				picture.setHeight(dimension.height);
+				picture.setThumbnail(rootPath.relativize(thumbnailPath).toString());
+
+				log.debug("thumbnail path: %s", rootPath.resolve((thumbnailPath)).toString());
+
 				pictureMapper.insert(picture);
 
 				OrderPicture orderPicture = new OrderPicture(picture.getId(), orderSummary.getId(), "default", 1, OrderPictureStatus.NEW.getValue());

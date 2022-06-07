@@ -36,7 +36,11 @@ export default class OrderItemOverview extends Component {
 
     let photoList = response.data.map(item => {
       let object = {...item};
-      object.src = Config.BASE_URL + item.src
+      if(item.thumbnail != null && item.thumbnail != undefined) {
+        object.src = Config.BASE_URL + item.thumbnail;
+      } else {
+        object.src = Config.BASE_URL + item.src;
+      }
       return object;
     })
 

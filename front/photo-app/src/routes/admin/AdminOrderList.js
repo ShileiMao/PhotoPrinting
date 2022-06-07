@@ -180,7 +180,7 @@ class AdminOrderList extends Component {
     }
 
     const unapproved = findOptionForDbValue(OrderStatus, -1);
-    const approved = findOptionForDbValue(OrderStatus, selectedOrders[0].status);
+    const approved = findOptionForDbValue(OrderStatus, 0);
 
     let options = OrderStatus.filter(item => {
       return item.dbValue > approved.dbValue
@@ -408,7 +408,8 @@ class AdminOrderList extends Component {
                   <thead>
                   <tr>
                       <th>选择</th>
-                      <SortableTableHeader title={"ID"} sortKeyword="id" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
+                      {/* <SortableTableHeader title={"ID"} sortKeyword="id" display={false} onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} /> */}
+                      <SortableTableHeader title={"订单号"} sortKeyword="pdd_order_number" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <SortableTableHeader title={"名称"} sortKeyword="title" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <SortableTableHeader title={"描述"} sortKeyword="description" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />
                       <SortableTableHeader title={"打印张数"} sortKeyword="num_photos" onSortChanged={this.onSortChanged} currentSorting={this.state.orderBy} />

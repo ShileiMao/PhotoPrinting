@@ -25,6 +25,8 @@ public class Pictures {
     // location on the system
     private String location;
 
+    private String thumbnail;
+
     private Integer width;
 
     private Integer height;

@@ -1,5 +1,6 @@
 package com.pdd.photoprint.photo.controllers;
 
+import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
 import com.pdd.photoprint.photo.Configs.UserLoginType;
 import com.pdd.photoprint.photo.Configs.UserType;
@@ -46,7 +47,7 @@ public class PddQueryController {
         RestResponse response = new RestResponse();
 
         PddOrderSummary summary = orderMapper.queryOrderByNumber(orderNumber);
-        if(summary != null) {
+        if(summary != null && summary.getStatus() < OrderStatus.FINISH.getValue()) {
             response.setStatus(RestRepStatus.SUCCESS.name());
             response.setMessage("成功!");
             response.setData(summary);

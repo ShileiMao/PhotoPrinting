@@ -33,7 +33,8 @@ public class AppConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/pdd/order/add")
                 .excludePathPatterns("/pdd/order/edit")
                 .excludePathPatterns("/files/uploadMultiple")
-                .excludePathPatterns("/files/download/*/*");
+                .excludePathPatterns("/files/download/*/*")
+                .excludePathPatterns("/files/download/*/*/*");
 
         registry.addInterceptor(this.requestLogInterceptor);
     }
