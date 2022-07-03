@@ -2,6 +2,7 @@ package com.pdd.photoprint.photo.controllers;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,16 +10,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.pdd.photoprint.photo.Configs.OrderPictureStatus;
 import com.pdd.photoprint.photo.Configs.OrderStatus;
 import com.pdd.photoprint.photo.Configs.RestRepStatus;
-import com.pdd.photoprint.photo.Storage.StorageDuplicateFileException;
 import com.pdd.photoprint.photo.Storage.StorageFileNotFoundException;
 import com.pdd.photoprint.photo.Storage.StorageService;
+import com.pdd.photoprint.photo.Utils.ZipLibrary;
 import com.pdd.photoprint.photo.VO.PddOrderSummary;
+import com.pdd.photoprint.photo.VO.PrintPhotoSummary;
 import com.pdd.photoprint.photo.VO.RestResponse;
 import com.pdd.photoprint.photo.image.DefaultImgCompressionFmt;
 import com.pdd.photoprint.photo.image.JpgImage;
@@ -27,27 +28,24 @@ import com.pdd.photoprint.photo.mapper.OrderPictureMapper;
 import com.pdd.photoprint.photo.mapper.PictureMapper;
 import com.pdd.photoprint.photo.model.OrderPicture;
 import com.pdd.photoprint.photo.model.Pictures;
-import lombok.extern.log4j.Log4j;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.imaging.ImageFormat;
 import org.apache.commons.imaging.ImageFormats;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
-import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 
 
 @Slf4j
@@ -65,6 +63,9 @@ public class PictureUploadController {
 	private PictureMapper pictureMapper;
 
 	private final StorageService storageService;
+
+	@Autowired
+	ZipLibrary zipLibrary;
 
 	@Autowired
 	public PictureUploadController(StorageService storageService) {
@@ -247,4 +248,68 @@ public class PictureUploadController {
 		return ResponseEntity.notFound().build();
 	}
 
+	@GetMapping("/downloadMutiple")
+	public ResponseEntity<Resource> downloadPhotos(@RequestParam("pddOrderNumber") String orderNumber, @RequestParam String photos) throws IOException {
+
+		if(StringUtils.isEmpty(photos)) {
+			return ResponseEntity.notFound().build();
+		}
+		List<Integer> photoIds = Arrays.stream(photos.split(","))
+				.map(part -> {
+			 return Integer.valueOf(part);
+		}).collect(Collectors.toList());
+
+		List<PrintPhotoSummary> printPhotoSummaries = this.orderPictureMapper.queryPicturesOfOrder(orderNumber, "");
+		ArrayList<PrintPhotoSummary> photosToDownload = new ArrayList<>();
+
+		for(PrintPhotoSummary photoSummary : printPhotoSummaries) {
+			for(Integer photoId : photoIds) {
+				if(photoId.intValue() == photoSummary.getPictureId()) {
+					photosToDownload.add(photoSummary);
+					break;
+				}
+			}
+		}
+
+		if(photosToDownload.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+
+		Path rootPath = Path.of(this.storageService.getRootDirPath());
+		String firstImgPath = photosToDownload.get(0).getSrc();
+		if(firstImgPath.startsWith("/")) {
+			firstImgPath = firstImgPath.substring(1);
+		}
+
+		Path dirPath = rootPath.resolve(firstImgPath).getParent();
+		Path tempDirPath = dirPath.resolve(dirPath.getFileName());
+
+		tempDirPath.toFile().mkdirs();
+
+		File [] fileList = tempDirPath.toFile().listFiles();
+		for(File file : fileList) {
+			file.delete();
+		}
+
+		File zipFile = new File(tempDirPath.toFile().getPath() + ".zip");
+		zipFile.deleteOnExit();
+
+		for(PrintPhotoSummary photoSummary : photosToDownload) {
+			String relativePath = photoSummary.getSrc();
+			if(relativePath.startsWith("/")) {
+				relativePath = relativePath.substring(1);
+			}
+			Path srcPath = rootPath.resolve(relativePath);
+			Path destPath = tempDirPath.resolve(srcPath.getFileName());
+			Files.copy(srcPath, destPath);
+		}
+
+		zipFile = this.zipLibrary.zipItems(tempDirPath.toString());
+
+		return ResponseEntity.ok()
+				.contentLength(zipFile.length())
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.header("Content-disposition", "attachment; filename="+ zipFile.getName())
+				.body(new InputStreamResource(new FileInputStream(zipFile)));
+	}
 }

@@ -47,7 +47,6 @@ export const PrintLayout = React.forwardRef((props, ref) => {
 
     let response = await queryPhotos(orderNumber)
     
-    myLogger.debug("order response: " + JSON.stringify(response))
     if(response.status.toLowerCase() === 'error') {
       this.setState({allPhotos: []}) 
       return
@@ -109,8 +108,6 @@ export const PrintLayout = React.forwardRef((props, ref) => {
   // }
 
   const allPhotos2 = allPhotos || allPhotos1 || []
-
-  console.log("all photos2; " + JSON.stringify(allPhotos2))
 
   const getClassName = (element,index) => {
     const isLandscape = element.width > element.height;

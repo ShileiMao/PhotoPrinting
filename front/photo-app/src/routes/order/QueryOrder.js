@@ -52,7 +52,7 @@ export const QueryOrder = () => {
             <div className='justify-content-md-center'>
               <ul className='nav nav-pills card-header-pills text-center'>
 
-                <li className="nav-item nav-link"><Link to={"/order/add"} >录入订单</Link></li>
+                {/* <li className="nav-item nav-link"><Link to={"/order/add"} >录入订单</Link></li> */}
 
               </ul>
             </div> 

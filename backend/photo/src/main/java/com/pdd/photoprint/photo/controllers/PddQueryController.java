@@ -1,9 +1,6 @@
 package com.pdd.photoprint.photo.controllers;
 
-import com.pdd.photoprint.photo.Configs.OrderStatus;
-import com.pdd.photoprint.photo.Configs.RestRepStatus;
-import com.pdd.photoprint.photo.Configs.UserLoginType;
-import com.pdd.photoprint.photo.Configs.UserType;
+import com.pdd.photoprint.photo.Configs.*;
 import com.pdd.photoprint.photo.DTO.AddOrderDTO;
 import com.pdd.photoprint.photo.Utils.AccessTokenGenerator;
 import com.pdd.photoprint.photo.Utils.DateHelper;
@@ -17,6 +14,7 @@ import com.pdd.photoprint.photo.mapper.UserMapper;
 import com.pdd.photoprint.photo.model.UserAccessToken;
 import com.pdd.photoprint.photo.model.Users;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.util.DateUtils;
 
@@ -57,6 +55,36 @@ public class PddQueryController {
             return response;
         }
 
+        AddOrderDTO addOrderDTO = new AddOrderDTO();
+
+        int defaultCopies = 100;
+        addOrderDTO.setPddOrderNumber(orderNumber);
+        addOrderDTO.setNumPhotos(defaultCopies);
+        addOrderDTO.setStatus(OrderStatus.UNPROVED);
+        addOrderDTO.setAddress("待补充");
+        addOrderDTO.setAddressDetails("待补充");
+        addOrderDTO.setTitle("打印照片" + defaultCopies + "张");
+        addOrderDTO.setUserName(orderNumber);
+        addOrderDTO.setDescription("待填入");
+        addOrderDTO.setPhotoSize(PhotoSize.DEFAULT);
+        addOrderDTO.setPackaging(Packaging.DEFAULT);
+        addOrderDTO.setPhoneNumber("");
+
+        response = addOrder(addOrderDTO, true);
+
+        // 如果订单不存在，则添加默认订单
+        if(response.checkResponse()) {
+            summary = orderMapper.queryOrderByNumber(orderNumber);
+            if(summary != null && summary.getStatus() < OrderStatus.FINISH.getValue()) {
+                response.setStatus(RestRepStatus.SUCCESS.name());
+                response.setMessage("成功!");
+                response.setData(summary);
+
+                return response;
+            }
+        }
+
+
         // TODO: query from pdd
         response.setError("订单信息不存在，请检查订单号，或尝试录入新订单？");
         return response;
@@ -64,9 +92,9 @@ public class PddQueryController {
 
 
     @PostMapping("/order/add")
-    public RestResponse addOrder(@RequestBody AddOrderDTO addOrderDTO) {
+    public RestResponse addOrder(@RequestBody AddOrderDTO addOrderDTO, boolean ignorePhoneNumber) {
         OrderHelper orderHelper = new OrderHelper(this.orderMapper, this.postAddrMapper);
-        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO, ignorePhoneNumber);
         if(!response.checkResponse()) {
             return response;
         }
@@ -77,7 +105,7 @@ public class PddQueryController {
     @PostMapping("/order/edit")
     public RestResponse editOrder(@RequestBody AddOrderDTO addOrderDTO) {
         OrderHelper orderHelper = new OrderHelper(this.orderMapper, this.postAddrMapper);
-        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO, false);
         if(!response.checkResponse()) {
             return response;
         }

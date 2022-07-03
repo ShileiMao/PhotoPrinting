@@ -15,26 +15,26 @@ const myLogger = {
      * @param  {...any} args 
      */
     debug: (message, ...args) => {
-        console.log(message, ...args);
+        // console.log(message, ...args);
         // logger.debug(message, ...args);
     },
 
     info: (message, ...args) => {
-        console.log(message, ...args);
+        // console.log(message, ...args);
         // logger.info(message, ...args);
     },
 
     warn: (message, ...args) => {
-        console.log(message, ...args);
+        // console.log(message, ...args);
         // logger.warn(message, ...args);
     },
     error: (message, ...args) => {
-        console.log(message, ...args);
+        // console.log(message, ...args);
         // logger.error(message, ...args);
     },
 
     fatal: (message, ...args) => {
-        console.log(message, ...args);
+        // console.log(message, ...args);
         // logger.fatal(message, ...args);
     }
 }

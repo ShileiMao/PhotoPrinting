@@ -4,7 +4,6 @@ import { StringUtils } from '../utils/StringUtils'
 
 export default function OrderOverView({order, photoCount}) {
 
-  console.log("order: " + JSON.stringify(order))
 
   const uploadedPhotos = photoCount || 0
   return (

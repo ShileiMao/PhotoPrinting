@@ -22,7 +22,7 @@ export default class UploadPhoto extends Component {
   }
 
   onImageUpload() {
-    console.log("on image upload ")
+    
   }
 
   onChange(imageList, addUpdateIndex) {
@@ -32,15 +32,14 @@ export default class UploadPhoto extends Component {
   }
 
   onImageRemoveAll() {
-    console.log("on image remove all")
+    
   }
 
   onImageRemove() {
-    console.log("on image remove")
+    
   }
 
   async uploadAll() {
-    console.log("upload all")
     let url = `/files/uploadMultiple` 
 
     let checkRepeat = {}
@@ -70,7 +69,7 @@ export default class UploadPhoto extends Component {
       ToastHelper.showError(response.error || "上传失败");
       return;
     }
-    console.log("response: " + JSON.stringify(response));
+    
     ToastHelper.showDefault("上传成功！");
 
     this.props.hideUpload();

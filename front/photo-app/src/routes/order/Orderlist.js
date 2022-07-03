@@ -26,8 +26,6 @@ export const Orderlist = () => {
         array.push(response.data);
         setOrderArr(array);
 
-        myLogger.debug("orderSummary: " + JSON.stringify(response.data));
-
         // storeToken(TOKEN_KEYS.ACCESS_TOKEN, response.data.accessToken);
         // storeToken(TOKEN_KEYS.USER_TYPE, response.data.userType);
         // storeToken(TOKEN_KEYS.USER_LOGIN, response.data.pddOrderNumber);

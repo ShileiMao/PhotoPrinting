@@ -1,4 +1,4 @@
-import { post, get, put, _delete } from "./axios";
+import { post, get, put, _delete, getDownload } from "./axios";
 import { getToken, removeToken } from "./token";
 import TOKEN_KEYS from "./consts";
 import { param } from "express/lib/request";
@@ -38,6 +38,13 @@ export function apiGet(url, params = {}) {
 
     let params1 = {...params, ...authHeaders}
     return get(url, params1);
+}
+
+export function apiGetDownload(url, params = {}) {
+    let authHeaders = getAuthenticationHeaders()
+
+    let params1 = {...params, ...authHeaders}
+    return getDownload(url, params1);
 }
 
 export function apiPut(url, params = {}, data = {}) {

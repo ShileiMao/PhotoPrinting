@@ -3,6 +3,7 @@ import { render } from "react-dom";
 import Gallery from "react-photo-gallery";
 import SelectedImage from './SelectedImage'
 import { photos } from "../photoList/photos";
+import myLogger from "../../utils/logger";
 
 const NormalLayout = (props) => {
   const allPhotos = props.images.map((item, index) => {
@@ -14,7 +15,7 @@ const NormalLayout = (props) => {
     }
   })
 
-  console.log("images: " + JSON.stringify(allPhotos))
+  myLogger.debug("images: " + JSON.stringify(allPhotos))
 
   const appendSelected = props.appendSelected || (() => {})
 

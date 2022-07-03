@@ -124,7 +124,7 @@ public class OrderHelper {
         return response;
     }
 
-    public RestResponse validateAddOrderFields(AddOrderDTO addOrderDTO) {
+    public RestResponse validateAddOrderFields(AddOrderDTO addOrderDTO, boolean ignorePhoneNumber) {
         RestResponse response = new RestResponse();
         if(StringUtils.isEmpty(addOrderDTO.getPddOrderNumber())) {
             response.setError("请输入订单号");
@@ -166,7 +166,7 @@ public class OrderHelper {
             return response;
         }
 
-        if(StringUtils.isEmpty(addOrderDTO.getPhoneNumber())) {
+        if(!ignorePhoneNumber && StringUtils.isEmpty(addOrderDTO.getPhoneNumber())) {
             response.setError("请输入电话号码");
             return response;
         }

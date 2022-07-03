@@ -335,7 +335,7 @@ public class AdminController {
     @PostMapping("/order/add")
     public RestResponse addOrder(@RequestBody AddOrderDTO addOrderDTO) {
         OrderHelper orderHelper = new OrderHelper(this.orderService.getOrderMapper(), this.postAddrMapper);
-        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO, false);
         if(!response.checkResponse()) {
             return response;
         }
@@ -365,7 +365,7 @@ public class AdminController {
     @PostMapping("/order/edit")
     public RestResponse editOrder(@RequestBody AddOrderDTO addOrderDTO) {
         OrderHelper orderHelper = new OrderHelper(this.orderService.getOrderMapper(), this.postAddrMapper);
-        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO);
+        RestResponse response = orderHelper.validateAddOrderFields(addOrderDTO, false);
         if(!response.checkResponse()) {
             return response;
         }

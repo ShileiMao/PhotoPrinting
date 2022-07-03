@@ -2,6 +2,7 @@
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
 import webConf from '../config/webConf'
+import myLogger from './logger';
 import ToastHelper from './toastHelper';
 
 
@@ -36,6 +37,8 @@ const config = {
     // }
   }
 }
+
+myLogger.debug("back end url: " + webConf.BASE_URL)
 
 // const retryTime = 2 // 请求失败重试次数
 // const retryDelay = 1500 // 请求失败重试间隔
@@ -101,7 +104,7 @@ _axios.interceptors.request.use(
     } else {
       // TODO: 其他类型请求数据格式处理
       /* eslint-disable-next-line */
-      console.log("--- put")
+      console.log("put")
       console.warn(`其他请求类型: ${reqConfig.method}, 暂无自动处理`)
     }
     return reqConfig
@@ -161,7 +164,17 @@ export function get(url, params = {}) {
     method: 'get',
     url,
     params,
-    timeoutErrorMessage: webConf.TIMEOUT_MSG
+    timeoutErrorMessage: webConf.TIMEOUT_MSG,
+  })
+}
+
+export function getDownload(url, params = {}) {
+  return _axios({
+    method: 'get',
+    url,
+    params,
+    responseType: 'blob',
+    timeoutErrorMessage: webConf.TIMEOUT_MSG,
   })
 }
 

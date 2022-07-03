@@ -1,6 +1,6 @@
 import React, { Component, useContext } from 'react'
 import { PrintLayout } from '../photosLayouts/PrintLayout';
-import { deleteSelectedPhotos, loadOrders, queryPhotos, toDataURL, updateOrderStatus, updatePhotoStatus } from '../../utils/apiHelper';
+import { apiGet, apiGetDownload, deleteSelectedPhotos, loadOrders, queryPhotos, toDataURL, updateOrderStatus, updatePhotoStatus } from '../../utils/apiHelper';
 import myLogger from '../../utils/logger';
 import ReactToPrint from "react-to-print"
 import Config from '../../config/webConf';
@@ -49,6 +49,7 @@ class AdminOrderDetails extends Component {
       this.toggleSelectAll = this.toggleSelectAll.bind(this);
       this.hasSelectedPhoto = this.hasSelectedPhoto.bind(this);
       this.showPrintConfirm = this.showPrintConfirm.bind(this);
+      this.downloadSelected = this.downloadSelected.bind(this)
   }
   
   async refreshPhotoList() {
@@ -68,8 +69,6 @@ class AdminOrderDetails extends Component {
       this.setState({allPhotos: []}) 
       return
     }
-
-    // console.log("query images: " + JSON.stringify(response.data))
 
     let photoList = response.data.map(item => {
       let object = {...item};
@@ -196,7 +195,6 @@ class AdminOrderDetails extends Component {
     }
 
     const paperSelected = (e) => {
-      console.log("paper selected: " + JSON.parse(e.target.value))
       this.setState({paperSize: JSON.parse(e.target.value)})
     }
 
@@ -245,7 +243,6 @@ class AdminOrderDetails extends Component {
         //   ... element,
         //   src: imageData
         // }
-        console.log("image data: --- url: " + imageURL)
         return {
           ... element,
           imageData: imageData
@@ -264,8 +261,6 @@ class AdminOrderDetails extends Component {
         photoToPrint: downloadedImgs
       }, this.photoPrintFinished)
     });
-
-    console.log("photo print finished: " );
   }
 
   async photoPrintFinished(params) {
@@ -281,7 +276,6 @@ class AdminOrderDetails extends Component {
       this.refreshPhotoList()
     }
 
-    console.log("photo print finished: " + params);
     this.setState({
       showAlert: true,
       alertText: "照片已打印？",
@@ -308,7 +302,6 @@ class AdminOrderDetails extends Component {
     }
 
     const deleteConfirmed = async () => {
-      console.log("photo delete confirm");
       const selected = this.state.allPhotos.filter(item => {
         return item.isSelected === true
       })
@@ -352,6 +345,50 @@ class AdminOrderDetails extends Component {
     </>)
   }
 
+  async downloadSelected() {
+    const selected = this.state.allPhotos.filter(item => {
+      return item.isSelected === true
+    })
+
+    if(selected.length === 0) {
+      this.setState({
+        showAlert: true,
+        alertTitle: "提示",
+        alertText: "未选择照片",
+        alertCancelCallback: null,
+        alertConfirmCallback: null
+      })
+      return;
+    }
+
+    const selectedIds = selected.map (item => {
+      return item.pictureId + ""
+    }).join(",");
+
+    const params = 
+    {
+      pddOrderNumber: this.state.orderNumber, 
+      photos: selectedIds,
+    }
+    apiGetDownload("/files/downloadMutiple", params)
+    .then(response => {
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(response);
+      link.href = url;
+      link.download = this.state.orderNumber + ".zip"
+      link.click();
+
+      // const url = window.URL
+      //       .createObjectURL(new Blob([response.data]));
+      // const link = document.createElement('a');
+      // link.href = url;
+      // document.body.appendChild(link);
+      // link.setAttribute('download', 'download.zip')
+      // link.click();
+      // document.body.removeChild(link);
+    })
+  }
+
 
   // 审核通过
   async approvalOrder() {
@@ -373,7 +410,6 @@ class AdminOrderDetails extends Component {
     })
 
     if(unprintedPhoto.length === 0 && printedPhoto.length >= this.state.order.numPhotos) {
-      console.log("all printed")
       const printedState = OrderStatusHash.PRINTED;
       const result = await updateOrderStatus(this.state.orderNumber, printedState.value);
     } else {
@@ -435,6 +471,9 @@ class AdminOrderDetails extends Component {
                           onAfterPrint={this.photoPrintFinished}
                         >
                         </ReactToPrint> */}
+                        &nbsp;
+
+                        <button className='btn btn-secondary btn-sm' onClick={this.downloadSelected}>下载</button>
                         &nbsp;
                       </>
                     }
