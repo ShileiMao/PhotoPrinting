@@ -264,7 +264,7 @@ export async function adminEditOrder(data) {
 
 export async function deleteOrders(data) {
     const url = `/admin/order/delete`
-    const result = await apiDelete(url, data);
+    const result = await _delete(url, data);
     return result;
 }
 

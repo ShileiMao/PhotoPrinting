@@ -107,7 +107,7 @@ public class PictureService {
         pictureMapper.deleteById(id);
 
         String location = picture.getLocation();
-        if(!this.storageService.delete("", location)) {
+        if(this.storageService.fileExists("", location) && !this.storageService.delete("", location)) {
             response.setStatus(RestRepStatus.ERROR.name());
             response.setError("删除失败！");
             return response;

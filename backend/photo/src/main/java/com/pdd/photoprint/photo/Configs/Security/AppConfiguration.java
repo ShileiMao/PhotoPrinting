@@ -33,6 +33,7 @@ public class AppConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/pdd/order/add")
                 .excludePathPatterns("/pdd/order/edit")
                 .excludePathPatterns("/files/uploadMultiple")
+                .excludePathPatterns("/*/photos/deleteMultiple")
                 .excludePathPatterns("/files/download/*/*")
                 .excludePathPatterns("/files/download/*/*/*");
 
